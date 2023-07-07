@@ -82,7 +82,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                     consumer = holder.next();
                 qyMsg.putMsg(string);
                 if (consumer == null) continue;
-                qyMsg.setFrom(consumer.getName());
+                qyMsg.setFrom(consumer.getId());
                 QyMsg back = get(wait, consumer, qyMsg, waitTime);
                 String type = MsgHelper.gainMsg(back);
                 switch (type) {
@@ -102,7 +102,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         Consumer consumer = holder.next();
         qyMsg.putMsg(string);
         if (consumer != null) {
-            qyMsg.setFrom(consumer.getName());
+            qyMsg.setFrom(consumer.getId());
             QyMsg back = get(wait, consumer, qyMsg, waitTime);
             String type = MsgHelper.gainMsg(back);
             switch (type) {
