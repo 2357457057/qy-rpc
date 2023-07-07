@@ -46,7 +46,7 @@ public class Producer {
         if (annotation == null) return;
         String className = RpcUtil.getClassName(aClass);
         if (className.contains(Constants.SpringCGLib)) {
-            String[] split = className.split(Constants.SpringCGLib);
+            String[] split = className.split(Constants.SpringCGLibRegx);
             aClass = Class.forName(split[0]);
             className = RpcUtil.getClassName(aClass);
         }
