@@ -7,7 +7,7 @@ import top.yqingyu.qymsg.MsgHelper;
 import top.yqingyu.qymsg.MsgType;
 import top.yqingyu.qymsg.QyMsg;
 import top.yqingyu.qymsg.netty.QyMsgServerHandler;
-import top.yqingyu.rpc.Dict;
+import top.yqingyu.rpc.Constants;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,26 +35,26 @@ public class RpcHandler extends QyMsgServerHandler {
     QyMsg deal(ChannelHandlerContext ctx, QyMsg msg) {
         QyMsg qyMsg = new QyMsg(MsgType.NORM_MSG, DataType.OBJECT);
         if (MsgType.AC.equals(msg.getMsgType())) {
-            qyMsg.putMsg(Dict.invokeSuccess);
-            qyMsg.putMsgData(Dict.serviceIdentifierTag, new String(producer.serviceIdentifierTag, StandardCharsets.UTF_8));
+            qyMsg.putMsg(Constants.invokeSuccess);
+            qyMsg.putMsgData(Constants.serviceIdentifierTag, new String(producer.serviceIdentifierTag, StandardCharsets.UTF_8));
             return qyMsg;
         }
 
         String s = MsgHelper.gainMsg(msg);
         Bean bean = ROUTING_TABLE.get(s);
         if (bean == null) {
-            qyMsg.putMsg(Dict.invokeNoSuch);
+            qyMsg.putMsg(Constants.invokeNoSuch);
             return qyMsg;
         }
         try {
             DataMap dataMap = msg.getDataMap();
-            Object[] o = (Object[]) dataMap.get(Dict.parameterList);
+            Object[] o = (Object[]) dataMap.get(Constants.parameterList);
             Object invoke = bean.invoke(o);
-            qyMsg.putMsg(Dict.invokeSuccess);
-            qyMsg.putMsgData(Dict.invokeResult, invoke);
+            qyMsg.putMsg(Constants.invokeSuccess);
+            qyMsg.putMsgData(Constants.invokeResult, invoke);
         } catch (Throwable e) {
-            qyMsg.putMsg(Dict.invokeThrowError);
-            qyMsg.putMsgData(Dict.invokeResult, e);
+            qyMsg.putMsg(Constants.invokeThrowError);
+            qyMsg.putMsgData(Constants.invokeResult, e);
             serverExceptionHandler.exceptionCallBack(ctx.channel().remoteAddress(), msg, e);
         }
         return qyMsg;

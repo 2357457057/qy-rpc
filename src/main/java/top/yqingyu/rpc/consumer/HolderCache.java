@@ -7,7 +7,7 @@ import top.yqingyu.qymsg.MsgHelper;
 import top.yqingyu.qymsg.MsgType;
 import top.yqingyu.qymsg.QyMsg;
 import top.yqingyu.qymsg.netty.Connection;
-import top.yqingyu.rpc.Dict;
+import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.exception.NoSuchHolderException;
 
 import java.util.List;
@@ -23,8 +23,8 @@ public class HolderCache {
         Connection connection = consumer.getClient().getConnection();
         String name = consumer.getName();
         QyMsg qyMsg = new QyMsg(MsgType.AC, DataType.OBJECT);
-        QyMsg back = connection.get(qyMsg, Dict.authenticationWaitTime);
-        String s = MsgHelper.gainMsgValue(back, Dict.serviceIdentifierTag);
+        QyMsg back = connection.get(qyMsg, Constants.authenticationWaitTime);
+        String s = MsgHelper.gainMsgValue(back, Constants.serviceIdentifierTag);
         if (!CONSUMER_MAP.containsKey(name)) {
             ConsumerHolder holder = new ConsumerHolder(s);
             holder.add(consumer, s);

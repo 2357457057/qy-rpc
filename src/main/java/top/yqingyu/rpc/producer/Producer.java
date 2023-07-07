@@ -4,9 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.yqingyu.common.utils.ClazzUtil;
 import top.yqingyu.qymsg.netty.MsgServer;
-import top.yqingyu.rpc.Dict;
+import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.annontation.QyRpcProducer;
-import top.yqingyu.rpc.consumer.HolderCache;
 import top.yqingyu.rpc.util.RpcUtil;
 
 import java.lang.reflect.Constructor;
@@ -41,21 +40,25 @@ public class Producer {
     }
 
 
-    public void register(Object o) {
+    public void register(Object o) throws ClassNotFoundException {
         Class<?> aClass = o.getClass();
         QyRpcProducer annotation = aClass.getAnnotation(QyRpcProducer.class);
         if (annotation == null) return;
-
         String className = RpcUtil.getClassName(aClass);
+        if (className.contains(Constants.SpringCGLib)) {
+            String[] split = className.split(Constants.SpringCGLib);
+            aClass = Class.forName(split[0]);
+            className = RpcUtil.getClassName(aClass);
+        }
         Method[] methods = aClass.getDeclaredMethods();
         for (Method method : methods) {
-            StringBuilder sb = new StringBuilder(className).append(Dict.method).append(method.getName());
+            StringBuilder sb = new StringBuilder(className).append(Constants.method).append(method.getName());
             if (method.trySetAccessible()) {
                 method.setAccessible(true);
             }
             Class<?>[] parameterTypes = method.getParameterTypes();
             for (Class<?> parameterType : parameterTypes) {
-                sb.append(Dict.param).append(parameterType.getName());
+                sb.append(Constants.param).append(parameterType.getName());
             }
             Bean bean = new Bean();
             bean.method = method;
@@ -78,15 +81,7 @@ public class Producer {
     }
 
     public void start() throws Exception {
-        this.msgServer = new MsgServer.Builder()
-                .handler(RpcHandler.class, this)
-                .radix(radix)
-                .pool(pool)
-                .serverName(serverName)
-                .bodyLengthMax(bodyLengthMax)
-                .threadName(threadName)
-                .clearTime(clearTime)
-                .build();
+        this.msgServer = new MsgServer.Builder().handler(RpcHandler.class, this).radix(radix).pool(pool).serverName(serverName).bodyLengthMax(bodyLengthMax).threadName(threadName).clearTime(clearTime).build();
         msgServer.start(port);
     }
 

@@ -1,7 +1,6 @@
 package top.yqingyu.rpc;
 
-public interface Dict {
-    String cglibProxyClassName = "[$]{2}EnhancerByCGLIB[$]{2}";
+public interface Constants {
     String method = "@";
     String param = "#";
     String parameterList = "parameterList";
@@ -12,4 +11,5 @@ public interface Dict {
     String serviceIdentifierTag = "serviceIdentifierTag";
     //ms
     long authenticationWaitTime = 3000;
+    String SpringCGLib = "$$SpringCGLIB$$";
 }

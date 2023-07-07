@@ -10,7 +10,7 @@ import top.yqingyu.qymsg.MsgHelper;
 import top.yqingyu.qymsg.MsgType;
 import top.yqingyu.qymsg.QyMsg;
 import top.yqingyu.qymsg.netty.Connection;
-import top.yqingyu.rpc.Dict;
+import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.annontation.QyRpcProducerProperties;
 import top.yqingyu.rpc.exception.RpcException;
 import top.yqingyu.rpc.util.RpcUtil;
@@ -40,7 +40,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         if (StringUtil.isEmpty(string)) {
             String className = RpcUtil.getClassName(proxyClass);
             String name = method.getName();
-            StringBuilder sb = new StringBuilder(className).append(Dict.method).append(name);
+            StringBuilder sb = new StringBuilder(className).append(Constants.method).append(name);
             if (param != null) for (Object o : param) {
                 sb.append("#").append(o.getClass().getName());
             }
@@ -73,7 +73,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         }
 
         QyMsg qyMsg = new QyMsg(MsgType.NORM_MSG, DataType.OBJECT);
-        qyMsg.putMsgData(Dict.parameterList, param);
+        qyMsg.putMsgData(Constants.parameterList, param);
 
         if (retry) {
             Consumer consumer = null;
@@ -86,11 +86,11 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                 QyMsg back = get(wait, consumer, qyMsg, waitTime);
                 String type = MsgHelper.gainMsg(back);
                 switch (type) {
-                    case Dict.invokeSuccess -> {
-                        return back.getDataMap().get(Dict.invokeResult);
+                    case Constants.invokeSuccess -> {
+                        return back.getDataMap().get(Constants.invokeResult);
                     }
-                    case Dict.invokeThrowError -> {
-                        Throwable error = new Throwable("remote process error", (Throwable) back.getDataMap().get(Dict.invokeResult));
+                    case Constants.invokeThrowError -> {
+                        Throwable error = new Throwable("remote process error", (Throwable) back.getDataMap().get(Constants.invokeResult));
                         if (retryTimes - 1 == i)
                             throw error;
                         logger.error("", error);
@@ -106,14 +106,14 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
             QyMsg back = get(wait, consumer, qyMsg, waitTime);
             String type = MsgHelper.gainMsg(back);
             switch (type) {
-                case Dict.invokeSuccess -> {
-                    return back.getDataMap().get(Dict.invokeResult);
+                case Constants.invokeSuccess -> {
+                    return back.getDataMap().get(Constants.invokeResult);
                 }
-                case Dict.invokeNoSuch -> {
+                case Constants.invokeNoSuch -> {
                     return null;
                 }
-                case Dict.invokeThrowError ->
-                        throw new Throwable("remote process error", (Throwable) back.getDataMap().get(Dict.invokeResult));
+                case Constants.invokeThrowError ->
+                        throw new Throwable("remote process error", (Throwable) back.getDataMap().get(Constants.invokeResult));
                 default -> throw new RpcException("unknown type {}", type);
             }
         }
