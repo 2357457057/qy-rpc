@@ -18,12 +18,16 @@ public class Consumer {
     Consumer() {
     }
 
-    public static Consumer create(ConnectionConfig config,HolderCache holderCache) throws Exception {
+    public static Consumer create(ConnectionConfig config, HolderCache holderCache) throws Exception {
         Consumer consumer = new Consumer();
         consumer.client = MsgClient.create(config);
         consumer.name = config.getName();
         holderCache.addConsumer(consumer);
         return consumer;
+    }
+
+    public void shutdown() throws InterruptedException {
+        client.shutdown();
     }
 
     public MsgClient getClient() {

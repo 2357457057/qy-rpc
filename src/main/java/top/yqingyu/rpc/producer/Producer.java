@@ -1,9 +1,12 @@
 package top.yqingyu.rpc.producer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import top.yqingyu.common.utils.ClazzUtil;
 import top.yqingyu.qymsg.netty.MsgServer;
 import top.yqingyu.rpc.Dict;
 import top.yqingyu.rpc.annontation.QyRpcProducer;
+import top.yqingyu.rpc.consumer.HolderCache;
 import top.yqingyu.rpc.util.RpcUtil;
 
 import java.lang.reflect.Constructor;
@@ -13,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Producer {
+    public static final Logger logger = LoggerFactory.getLogger(Producer.class);
     byte[] serviceIdentifierTag = "QyRpcProducer".repeat(24).getBytes();
     final ConcurrentHashMap<String, Bean> ROUTING_TABLE = new ConcurrentHashMap<>();
     MsgServer msgServer;
@@ -84,6 +88,11 @@ public class Producer {
                 .clearTime(clearTime)
                 .build();
         msgServer.start(port);
+    }
+
+    public void shutdown() throws InterruptedException {
+        msgServer.shutdown();
+        logger.info("qyrpc producer is shutdown");
     }
 
     void serviceIdentifier(String s) {

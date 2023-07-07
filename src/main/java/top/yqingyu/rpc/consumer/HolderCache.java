@@ -1,5 +1,7 @@
 package top.yqingyu.rpc.consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import top.yqingyu.qymsg.DataType;
 import top.yqingyu.qymsg.MsgHelper;
 import top.yqingyu.qymsg.MsgType;
@@ -8,11 +10,13 @@ import top.yqingyu.qymsg.netty.Connection;
 import top.yqingyu.rpc.Dict;
 import top.yqingyu.rpc.exception.NoSuchHolderException;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 public class HolderCache {
 
+    public static final Logger logger = LoggerFactory.getLogger(HolderCache.class);
     public final ConcurrentHashMap<String, ConsumerHolder> CONSUMER_MAP = new ConcurrentHashMap<>();
 
     void addConsumer(Consumer consumer) throws Exception {
@@ -40,5 +44,19 @@ public class HolderCache {
 
     public <T> T getProxy(String consumerName, Class<T> clazz) {
         return getConsumerHolder(consumerName).getProxy(clazz);
+    }
+
+    public void shutdown() {
+        CONSUMER_MAP.forEach((s, holder) -> {
+            List<Consumer> consumerList = holder.consumerList;
+            for (Consumer consumer : consumerList) {
+                try {
+                    consumer.shutdown();
+                } catch (InterruptedException e) {
+                    logger.error("qyrpc consumer {} shutdown error", s, e);
+                }
+            }
+            logger.info("qyrpc consumer {} is shutdown", s);
+        });
     }
 }
