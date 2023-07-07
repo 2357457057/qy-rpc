@@ -5,6 +5,7 @@ import java.lang.annotation.*;
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface TransRpc {
+@Target(ElementType.FIELD)
+public @interface QyRpcConsumer {
+    String value();
 }

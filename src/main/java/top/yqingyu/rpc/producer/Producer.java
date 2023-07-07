@@ -3,7 +3,7 @@ package top.yqingyu.rpc.producer;
 import top.yqingyu.common.utils.ClazzUtil;
 import top.yqingyu.qymsg.netty.MsgServer;
 import top.yqingyu.rpc.Dict;
-import top.yqingyu.rpc.annontation.TransRpc;
+import top.yqingyu.rpc.annontation.QyRpcProducer;
 import top.yqingyu.rpc.util.RpcUtil;
 
 import java.lang.reflect.Constructor;
@@ -13,68 +13,33 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Producer {
-    byte[] serviceIdentifierTag = "QyRpc".repeat(24).getBytes();
+    byte[] serviceIdentifierTag = "QyRpcProducer".repeat(24).getBytes();
     final ConcurrentHashMap<String, Bean> ROUTING_TABLE = new ConcurrentHashMap<>();
     MsgServer msgServer;
-    String serverName = "QyRpcProducer";
-    ServerExceptionHandler exceptionHandler = new ServerExceptionHandler() {
-    };
+    final String serverName;
+    final ServerExceptionHandler exceptionHandler;
+    private final int pool;
+    private final int port;
+    private final int radix;
+    private final int clearTime;
+    private final int bodyLengthMax;
+    private final String threadName;
 
-    Producer() {
-    }
-
-    public static Producer create(int radix, int port) throws Exception {
-        Producer producer = new Producer();
-        MsgServer build = new MsgServer.Builder()
-                .handler(RpcHandler.class, producer)
-                .radix(radix)
-                .build();
-        build.start(port);
-        producer.msgServer = build;
-        return producer;
-    }
-
-    public static Producer create(int radix, int port, int threadNum) throws Exception {
-        Producer producer = new Producer();
-        MsgServer build = new MsgServer.Builder()
-                .handler(RpcHandler.class, producer)
-                .radix(radix)
-                .pool(threadNum)
-                .build();
-        build.start(port);
-        producer.msgServer = build;
-        return producer;
-    }
-
-    public static Producer create(int radix, int port, int threadNum, ServerExceptionHandler exceptionHandler) throws Exception {
-        Producer producer = new Producer();
-        producer.exceptionHandler = exceptionHandler;
-        MsgServer build = new MsgServer.Builder()
-                .handler(RpcHandler.class, producer)
-                .radix(radix)
-                .pool(threadNum)
-                .build();
-        build.start(port);
-        producer.msgServer = build;
-        return producer;
-    }
-
-    public static Producer create(int radix, int port, ServerExceptionHandler exceptionHandler) throws Exception {
-        Producer producer = new Producer();
-        producer.exceptionHandler = exceptionHandler;
-        MsgServer build = new MsgServer.Builder()
-                .handler(RpcHandler.class, producer)
-                .radix(radix)
-                .build();
-        build.start(port);
-        producer.msgServer = build;
-        return producer;
+    private Producer(Builder builder) {
+        serverName = builder.serverName;
+        exceptionHandler = builder.exceptionHandler;
+        pool = builder.pool;
+        radix = builder.radix;
+        clearTime = builder.clearTime;
+        bodyLengthMax = builder.bodyLengthMax;
+        threadName = builder.threadName;
+        port = builder.port;
     }
 
 
     public void register(Object o) {
         Class<?> aClass = o.getClass();
-        TransRpc annotation = aClass.getAnnotation(TransRpc.class);
+        QyRpcProducer annotation = aClass.getAnnotation(QyRpcProducer.class);
         if (annotation == null) return;
 
         String className = RpcUtil.getClassName(aClass);
@@ -98,7 +63,7 @@ public class Producer {
     }
 
     public void register(String packageName) throws Exception {
-        List<Class<?>> list = ClazzUtil.getClassListByAnnotation(packageName, TransRpc.class);
+        List<Class<?>> list = ClazzUtil.getClassListByAnnotation(packageName, QyRpcProducer.class);
         for (Class<?> aClass : list) {
             Constructor<?> constructor = aClass.getConstructor();
             if (constructor.trySetAccessible()) {
@@ -108,6 +73,18 @@ public class Producer {
         }
     }
 
+    public void start() throws Exception {
+        this.msgServer = new MsgServer.Builder()
+                .handler(RpcHandler.class, this)
+                .radix(radix)
+                .pool(pool)
+                .serverName(serverName)
+                .bodyLengthMax(bodyLengthMax)
+                .threadName(threadName)
+                .clearTime(clearTime)
+                .build();
+        msgServer.start(port);
+    }
 
     void serviceIdentifier(String s) {
         byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
@@ -117,7 +94,66 @@ public class Producer {
         }
     }
 
-    public void setServerName(String serverName) {
-        this.serverName = serverName;
+    public static final class Builder {
+        String serverName = "QyRpcProducer";
+        ServerExceptionHandler exceptionHandler = new ServerExceptionHandler() {
+        };
+        private int pool = Runtime.getRuntime().availableProcessors() * 2;
+        private int radix = 32;
+        private int port = 4729;
+        private int clearTime = 30 * 60 * 1000;
+        private int bodyLengthMax = 1400;
+        private String threadName = "handle";
+
+        private Builder() {
+        }
+
+        public static Builder newBuilder() {
+            return new Builder();
+        }
+
+        public Builder serverName(String val) {
+            serverName = val;
+            return this;
+        }
+
+        public Builder exceptionHandler(ServerExceptionHandler val) {
+            exceptionHandler = val;
+            return this;
+        }
+
+        public Builder pool(int val) {
+            pool = val;
+            return this;
+        }
+
+        public Builder radix(int val) {
+            radix = val;
+            return this;
+        }
+
+        public Builder clearTime(int val) {
+            clearTime = val;
+            return this;
+        }
+
+        public Builder bodyLengthMax(int val) {
+            bodyLengthMax = val;
+            return this;
+        }
+
+        public Builder threadName(String val) {
+            threadName = val;
+            return this;
+        }
+
+        public Builder port(int val) {
+            port = val;
+            return this;
+        }
+
+        public Producer build() throws Exception {
+            return new Producer(this);
+        }
     }
 }

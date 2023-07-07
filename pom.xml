@@ -9,7 +9,7 @@
         <version>1.9.4</version>
     </parent>
 
-    <artifactId>TransRpc</artifactId>
+    <artifactId>QyRpc</artifactId>
     <version>${parent.version}</version>
     <description>Qy's Rpc framework based on QyMsg transport protocol</description>
     <url>https://gitee.com/vqingyu/qy-rpc</url>
