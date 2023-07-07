@@ -26,6 +26,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
     ConcurrentHashMap<Method, QyRpcProducerProperties> methodPropertiesCache = new ConcurrentHashMap<>();
     ConcurrentHashMap<Method, Boolean> emptyMethodPropertiesCache = new ConcurrentHashMap<>();
     ConcurrentHashMap<Method, String> methodNameCache = new ConcurrentHashMap<>();
+    ConcurrentHashMap<Method, Object> specialMethodNameCache = new ConcurrentHashMap<>();
     final static Boolean b = false;
 
     public ProxyClassMethodExecutor(Class<?> proxyClass, ConsumerHolder holder) {
@@ -35,7 +36,10 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
 
     @Override
     public Object intercept(Object obj, Method method, Object[] param, MethodProxy proxy) throws Throwable {
-
+        Object result = specialMethodNameCache.get(method);
+        if (result != null) {
+            return result;
+        }
         String string = methodNameCache.get(method);
         if (StringUtil.isEmpty(string)) {
             String className = RpcUtil.getClassName(proxyClass);
@@ -95,6 +99,9 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                             throw error;
                         logger.error("", error);
                     }
+                    case Constants.invokeNoSuch -> {
+                        return invokeNoSuch(obj, method, param);
+                    }
                 }
             }
             return null;
@@ -110,7 +117,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                     return back.getDataMap().get(Constants.invokeResult);
                 }
                 case Constants.invokeNoSuch -> {
-                    return null;
+                    return invokeNoSuch(obj, method, param);
                 }
                 case Constants.invokeThrowError ->
                         throw new Throwable("remote process error", (Throwable) back.getDataMap().get(Constants.invokeResult));
@@ -120,6 +127,26 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         return null;
     }
 
+    private Object invokeNoSuch(Object obj, Method method, Object[] param) {
+        String methodName = method.getName();
+        if (!Constants.specialMethod.contains(methodName)) {
+            return null;
+        }
+        Object trn = null;
+        if ("toString".equals(methodName)) {
+            trn = proxyToString();
+        }
+        if ("hashcode".equals(methodName)) {
+            trn = proxyHashCode();
+        }
+        if ("equals".equals(methodName)) {
+            trn = proxyEquals(obj, param);
+        }
+        if (trn != null)
+            specialMethodNameCache.put(method, trn);
+        return trn;
+    }
+
     private static boolean check(long l) {
         return l > 0;
     }
@@ -127,6 +154,20 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
     private static QyMsg get(boolean b, Consumer consumer, QyMsg in, long time) throws Exception {
         Connection connection = consumer.getClient().getConnection();
         return b ? connection.get(in, time) : connection.get(in);
+    }
+
+    String proxyToString() {
+        return proxyClass.getSimpleName() + "@" + proxyHashCode();
+    }
+
+    int proxyHashCode() {
+        return this.hashCode();
+    }
+
+    boolean proxyEquals(Object obj, Object[] param) {
+        if (param == null)
+            return false;
+        return obj.equals(param[0]);
     }
 
 }

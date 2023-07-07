@@ -1,5 +1,9 @@
 package top.yqingyu.rpc;
 
+import top.yqingyu.common.utils.CollectionUtil;
+
+import java.util.*;
+
 public interface Constants {
     String method = "@";
     String param = "#";
@@ -13,4 +17,6 @@ public interface Constants {
     long authenticationWaitTime = 3000;
     String SpringCGLib = "$$SpringCGLIB$$";
     String SpringCGLibRegx = "[$]{2}SpringCGLIB[$]{2}";
+
+    List<String> specialMethod = Arrays.asList("toString", "hashcode", "equals");
 }
