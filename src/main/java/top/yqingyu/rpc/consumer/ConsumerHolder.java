@@ -1,5 +1,6 @@
 package top.yqingyu.rpc.consumer;
 
+import top.yqingyu.common.cglib.core.QyNamingPolicy;
 import top.yqingyu.common.cglib.proxy.Enhancer;
 import top.yqingyu.rpc.exception.IllegalRpcArgumentException;
 
@@ -38,6 +39,7 @@ public class ConsumerHolder {
         }
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(clazz);
+        enhancer.setNamingPolicy(QyNamingPolicy.INSTANCE);
         enhancer.setCallback(new ProxyClassMethodExecutor(clazz, this));
         T t = (T) enhancer.create();
         ProxyClassCache.put(clazz, t);
