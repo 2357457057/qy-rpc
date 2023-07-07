@@ -27,7 +27,7 @@ public class HolderCache {
             CONSUMER_MAP.put(name, holder);
             return;
         }
-        ConsumerHolder holder = CONSUMER_MAP.get(s);
+        ConsumerHolder holder = CONSUMER_MAP.get(name);
         holder.add(consumer, s);
     }
 
