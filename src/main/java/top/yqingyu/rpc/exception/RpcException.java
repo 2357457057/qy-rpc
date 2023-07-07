@@ -1,17 +1,18 @@
 package top.yqingyu.rpc.exception;
 
+import top.yqingyu.common.exception.QyRuntimeException;
 import top.yqingyu.common.utils.StringUtil;
 
-public class RpcException extends RuntimeException {
+public class RpcException extends QyRuntimeException {
     public RpcException() {
     }
 
     public RpcException(String message, Object... o) {
-        super(StringUtil.fillBrace(message, o));
+        super(message, o);
     }
 
     public RpcException(Throwable cause, String message, Object... o) {
-        super(StringUtil.fillBrace(message, o), cause);
+        super(cause, message, o);
     }
 
     public RpcException(Throwable cause) {
@@ -19,6 +20,6 @@ public class RpcException extends RuntimeException {
     }
 
     public RpcException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace, Object... o) {
-        super(StringUtil.fillBrace(message, o), cause, enableSuppression, writableStackTrace);
+        super(message, cause, enableSuppression, writableStackTrace, o);
     }
 }

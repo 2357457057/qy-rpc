@@ -10,4 +10,6 @@ public interface Dict {
     String invokeThrowError = "2";
     String invokeResult = "invokeResult";
     String serviceIdentifierTag = "serviceIdentifierTag";
+    //ms
+    long authenticationWaitTime = 3000;
 }

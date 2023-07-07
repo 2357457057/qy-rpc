@@ -8,4 +8,6 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 public @interface QyRpcConsumer {
     String value();
+
+    String name();
 }
