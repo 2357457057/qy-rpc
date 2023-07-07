@@ -33,9 +33,9 @@
         </developer>
     </developers>
     <scm>
-        <connection>https://gitee.com/vqingyu/App.git</connection>
-        <developerConnection>scm:git:ssh://git@gitee.com:vqingyu/commons-qy.git</developerConnection>
-        <url>https://github.com/2357457057/commons-qy.git</url>
+        <connection>https://gitee.com/vqingyu/qy-rpc.git</connection>
+        <developerConnection>scm:git:ssh://git@gitee.com:vqingyu/qy-rpc.git</developerConnection>
+        <url>https://gitee.com/vqingyu/qy-rpc.git</url>
     </scm>
     <distributionManagement>
         <repository>
