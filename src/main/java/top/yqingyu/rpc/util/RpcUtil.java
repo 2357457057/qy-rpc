@@ -9,9 +9,7 @@ public class RpcUtil {
         if (aClass.isInterface()) {
             return className;
         }
-        if (className.contains("$$SpringCGLIB$$")){
 
-        }
         Class<?>[] interfaces = aClass.getInterfaces();
         Class<?> interface$ = null;
         String[] classNameS = className.split("[.]");

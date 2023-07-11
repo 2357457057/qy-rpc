@@ -26,9 +26,11 @@ public class RpcHandler extends QyMsgServerHandler {
     @Override
     protected QyMsg handle(ChannelHandlerContext ctx, QyMsg msg) throws Exception {
         QyMsg deal = deal(ctx, msg);
-        deal.setFrom(producer.serverName);
-        deal.setDataType(msg.getDataType());
-        deal.setMsgType(msg.getMsgType());
+        if (deal != null) {
+            deal.setFrom(producer.serverName);
+            deal.setDataType(msg.getDataType());
+            deal.setMsgType(msg.getMsgType());
+        }
         return deal;
     }
 
@@ -39,7 +41,9 @@ public class RpcHandler extends QyMsgServerHandler {
             qyMsg.putMsgData(Constants.serviceIdentifierTag, new String(producer.serviceIdentifierTag, StandardCharsets.UTF_8));
             return qyMsg;
         }
-
+        if (MsgType.HEART_BEAT.equals(msg.getMsgType())) {
+            return null;
+        }
         String s = MsgHelper.gainMsg(msg);
         Bean bean = ROUTING_TABLE.get(s);
         if (bean == null) {
