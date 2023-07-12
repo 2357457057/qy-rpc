@@ -27,7 +27,7 @@ public class RpcHandler extends QyMsgServerHandler {
     protected QyMsg handle(ChannelHandlerContext ctx, QyMsg msg) throws Exception {
         String linkId = MsgHelper.gainMsgValue(msg, Constants.linkId);
         linkId = linkId == null ? msg.getFrom() : linkId;
-        Producer.RPC_LINK_ID.put(Thread.currentThread(), linkId);
+        Producer.RPC_LINK_ID.put(Thread.currentThread().getName(), linkId);
         QyMsg deal = deal(ctx, msg);
         if (deal != null) {
             deal.setFrom(producer.serverName);

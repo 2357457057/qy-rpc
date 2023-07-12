@@ -76,7 +76,7 @@ public class ConsumerHolderContext {
         rpcLinkId.setLinkId(id);
     }
 
-    public void setLinkId(Thread th, String id) {
+    public void setLinkId(String th, String id) {
         rpcLinkId.setLinkId(th, id);
     }
 }
