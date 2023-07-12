@@ -23,6 +23,8 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
     public static final Logger logger = LoggerFactory.getLogger(ProxyClassMethodExecutor.class);
     Class<?> proxyClass;
     ConsumerHolder holder;
+    ConsumerHolderContext ctx;
+    MethodExecuteInterceptor interceptor;
     ConcurrentHashMap<Method, QyRpcProducerProperties> methodPropertiesCache = new ConcurrentHashMap<>();
     ConcurrentHashMap<Method, Boolean> emptyMethodPropertiesCache = new ConcurrentHashMap<>();
     ConcurrentHashMap<Method, String> methodNameCache = new ConcurrentHashMap<>();
@@ -32,12 +34,16 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
     public ProxyClassMethodExecutor(Class<?> proxyClass, ConsumerHolder holder) {
         this.proxyClass = proxyClass;
         this.holder = holder;
+        ctx = holder.ctx;
+        interceptor = ctx.methodExecuteInterceptor;
     }
 
     @Override
     public Object intercept(Object obj, Method method, Object[] param, MethodProxy proxy) throws Throwable {
+        interceptor.before(ctx, method, param);
         Object result = specialMethodNameCache.get(method);
         if (result != null) {
+            interceptor.completely(ctx, method, param, result);
             return result;
         }
         String string = methodNameCache.get(method);
@@ -91,19 +97,25 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                 String type = MsgHelper.gainMsg(back);
                 switch (type) {
                     case Constants.invokeSuccess -> {
-                        return back.getDataMap().get(Constants.invokeResult);
+                        result = back.getDataMap().get(Constants.invokeResult);
+                        interceptor.completely(ctx, method, param, result);
+                        return result;
                     }
                     case Constants.invokeThrowError -> {
                         Throwable error = new Throwable("remote process error", (Throwable) back.getDataMap().get(Constants.invokeResult));
-                        if (retryTimes - 1 == i)
+                        interceptor.error(ctx, method, param, error);
+                        if (retryTimes - 1 == i) {
                             throw error;
+                        }
                         logger.error("", error);
                     }
                     case Constants.invokeNoSuch -> {
+                        interceptor.completely(ctx, method, param, result);
                         return invokeNoSuch(obj, method, param);
                     }
                 }
             }
+            interceptor.completely(ctx, method, param, result);
             return null;
         }
         Consumer consumer = holder.next();
@@ -114,14 +126,24 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
             String type = MsgHelper.gainMsg(back);
             switch (type) {
                 case Constants.invokeSuccess -> {
-                    return back.getDataMap().get(Constants.invokeResult);
+                    result = back.getDataMap().get(Constants.invokeResult);
+                    interceptor.completely(ctx, method, param, result);
+                    return result;
                 }
                 case Constants.invokeNoSuch -> {
+                    interceptor.completely(ctx, method, param, result);
                     return invokeNoSuch(obj, method, param);
                 }
-                case Constants.invokeThrowError ->
-                        throw new Throwable("remote process error", (Throwable) back.getDataMap().get(Constants.invokeResult));
-                default -> throw new RpcException("unknown type {}", type);
+                case Constants.invokeThrowError -> {
+                    Throwable error = new Throwable("remote process error", (Throwable) back.getDataMap().get(Constants.invokeResult));
+                    interceptor.error(ctx, method, param, error);
+                    throw error;
+                }
+                default -> {
+                    RpcException rpcException = new RpcException("unknown type {}", type);
+                    interceptor.error(ctx, method, param, rpcException);
+                    throw rpcException;
+                }
             }
         }
         return null;

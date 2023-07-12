@@ -19,8 +19,15 @@ public class ConsumerHolderContext {
     private static final Logger logger = LoggerFactory.getLogger(ConsumerHolderContext.class);
     private final ConcurrentHashMap<String, ConsumerHolder> CONSUMER_MAP = new ConcurrentHashMap<>();
     final RpcLinkId rpcLinkId;
+    MethodExecuteInterceptor methodExecuteInterceptor = new MethodExecuteInterceptor() {
+    };
 
     public ConsumerHolderContext() {
+        this.rpcLinkId = new RpcLinkId();
+    }
+
+    public ConsumerHolderContext(MethodExecuteInterceptor methodExecuteInterceptor) {
+        this.methodExecuteInterceptor = methodExecuteInterceptor;
         this.rpcLinkId = new RpcLinkId();
     }
 
