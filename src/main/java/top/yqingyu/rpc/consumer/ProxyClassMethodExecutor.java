@@ -78,7 +78,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
 
         QyMsg qyMsg = new QyMsg(MsgType.NORM_MSG, DataType.OBJECT);
         qyMsg.putMsgData(Constants.parameterList, param);
-
+        qyMsg.putMsgData(Constants.linkId, holder.ctx.rpcLinkId.getLinkId());
         if (retry) {
             Consumer consumer = null;
             for (int i = 0; i < retryTimes; i++) {

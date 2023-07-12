@@ -3,13 +3,9 @@ package top.yqingyu.rpc.consumer;
 import top.yqingyu.common.cglib.core.ClassLoaderAwareGeneratorStrategy;
 import top.yqingyu.common.cglib.core.DuplicatesPredicate;
 import top.yqingyu.common.cglib.core.QyNamingPolicy;
-import top.yqingyu.common.cglib.proxy.CallbackFilter;
 import top.yqingyu.common.cglib.proxy.Enhancer;
-import top.yqingyu.common.cglib.proxy.MethodInterceptor;
-import top.yqingyu.common.cglib.proxy.MethodProxy;
 import top.yqingyu.rpc.exception.IllegalRpcArgumentException;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,10 +16,11 @@ public class ConsumerHolder {
     final AtomicInteger i = new AtomicInteger();
     final ConcurrentHashMap<Class<?>, Object> ProxyClassCache = new ConcurrentHashMap<>();
     final String serverTag;
+    final ConsumerHolderContext ctx;
 
-
-    public ConsumerHolder(String serverTag) {
+    public ConsumerHolder(String serverTag, ConsumerHolderContext ctx) {
         this.serverTag = serverTag;
+        this.ctx = ctx;
     }
 
 

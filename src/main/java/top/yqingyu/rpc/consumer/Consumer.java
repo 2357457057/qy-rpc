@@ -18,11 +18,11 @@ public class Consumer {
     Consumer() {
     }
 
-    public static Consumer create(ConnectionConfig config, HolderCache holderCache) throws Exception {
+    public static Consumer create(ConnectionConfig config, ConsumerHolderContext consumerHolderContext) throws Exception {
         Consumer consumer = new Consumer();
         consumer.client = MsgClient.create(config);
         consumer.name = config.getName();
-        holderCache.addConsumer(consumer);
+        consumerHolderContext.addConsumer(consumer);
         return consumer;
     }
 

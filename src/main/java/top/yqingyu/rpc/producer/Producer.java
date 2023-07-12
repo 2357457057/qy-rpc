@@ -18,6 +18,7 @@ public class Producer {
     public static final Logger logger = LoggerFactory.getLogger(Producer.class);
     byte[] serviceIdentifierTag = "QyRpcProducer".repeat(24).getBytes();
     final ConcurrentHashMap<String, Bean> ROUTING_TABLE = new ConcurrentHashMap<>();
+    static final ConcurrentHashMap<Thread, String> RPC_LINK_ID = new ConcurrentHashMap<>();
     MsgServer msgServer;
     final String serverName;
     final ServerExceptionHandler exceptionHandler;
@@ -39,7 +40,10 @@ public class Producer {
         port = builder.port;
     }
 
-
+    /**
+     * 注册这个对象到RPC服务
+     * 服局将采用此对象执行相应的方法
+     */
     public void register(Object o) throws ClassNotFoundException {
         Class<?> aClass = o.getClass();
         QyRpcProducer annotation = aClass.getAnnotation(QyRpcProducer.class);
@@ -69,6 +73,11 @@ public class Producer {
         }
     }
 
+    /**
+     * 注册这个包下所有的类
+     * 采用无对象构造函数创建对象
+     * 服局将采用此对象执行相应的方法
+     */
     public void register(String packageName) throws Exception {
         List<Class<?>> list = ClazzUtil.getClassListByAnnotation(packageName, QyRpcProducer.class);
         for (Class<?> aClass : list) {
@@ -78,6 +87,14 @@ public class Producer {
             }
             register(constructor.newInstance());
         }
+    }
+
+    public static String getLinkId() {
+        return RPC_LINK_ID.get(Thread.currentThread());
+    }
+
+    public static String getLinkId(Thread th) {
+        return RPC_LINK_ID.get(th);
     }
 
     public void start() throws Exception {

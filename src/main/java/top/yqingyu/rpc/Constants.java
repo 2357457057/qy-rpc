@@ -19,4 +19,6 @@ public interface Constants {
     String SpringCGLibRegx = "[$]{2}SpringCGLIB[$]{2}";
 
     List<String> specialMethod = Arrays.asList("toString", "hashcode", "equals");
+
+    String linkId = "RPC_LINK_ID";
 }

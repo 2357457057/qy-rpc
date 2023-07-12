@@ -14,10 +14,15 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 
-public class HolderCache {
+public class ConsumerHolderContext {
 
-    public static final Logger logger = LoggerFactory.getLogger(HolderCache.class);
-    public final ConcurrentHashMap<String, ConsumerHolder> CONSUMER_MAP = new ConcurrentHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(ConsumerHolderContext.class);
+    private final ConcurrentHashMap<String, ConsumerHolder> CONSUMER_MAP = new ConcurrentHashMap<>();
+    final RpcLinkId rpcLinkId;
+
+    public ConsumerHolderContext() {
+        this.rpcLinkId = new RpcLinkId();
+    }
 
     void addConsumer(Consumer consumer) throws Exception {
         Connection connection = consumer.getClient().getConnection();
@@ -26,7 +31,7 @@ public class HolderCache {
         QyMsg back = connection.get(qyMsg, Constants.authenticationWaitTime);
         String s = MsgHelper.gainMsgValue(back, Constants.serviceIdentifierTag);
         if (!CONSUMER_MAP.containsKey(name)) {
-            ConsumerHolder holder = new ConsumerHolder(s);
+            ConsumerHolder holder = new ConsumerHolder(s, this);
             holder.add(consumer, s);
             CONSUMER_MAP.put(name, holder);
             return;
@@ -58,5 +63,13 @@ public class HolderCache {
             }
             logger.info("qyrpc consumer {} is shutdown", s);
         });
+    }
+
+    public void setLinkId(String id) {
+        rpcLinkId.setLinkId(id);
+    }
+
+    public void setLinkId(Thread th, String id) {
+        rpcLinkId.setLinkId(th, id);
     }
 }
