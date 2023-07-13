@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -47,32 +48,28 @@ public class Producer {
      * 服局将采用此对象执行相应的方法
      */
     public void register(Object o) throws ClassNotFoundException {
-        ArrayList<Class<?>> classArrayList = new ArrayList<>();
         Class<?> aClass = o.getClass();
-        classArrayList.add(aClass);
         QyRpcProducer annotation = aClass.getAnnotation(QyRpcProducer.class);
         Class<?> interface_ = null;
         if (annotation == null) {
             for (Class<?> anInterface : aClass.getInterfaces()) {
-                annotation = anInterface.getAnnotation(QyRpcProducer.class);
-                interface_ = anInterface;
-                if (annotation != null) break;
+                QyRpcProducer annotationT = anInterface.getAnnotation(QyRpcProducer.class);
+                if (annotationT != null) {
+                    interface_ = anInterface;
+                    annotation = annotationT;
+                }
             }
         }
         if (annotation == null) return;
+        List<Class<?>> classArrayList = getAllClass(aClass);
         String className = RpcUtil.getClassName(aClass);
         if (className.contains(Constants.SpringCGLib)) {
             String[] split = className.split(Constants.SpringCGLibRegx);
             aClass = Class.forName(split[0]);
-            classArrayList.add(aClass);
-            Class<?>[] interfaces = aClass.getInterfaces();
-            classArrayList.addAll(Arrays.asList(interfaces));
             className = RpcUtil.getClassName(aClass);
         }
         if (interface_ != null && className.contains(Constants.JDK_PROXY)) {
             className = interface_.getName();
-            Class<?>[] interfaces = interface_.getInterfaces();
-            classArrayList.addAll(Arrays.asList(interfaces));
         }
         for (Class<?> clazz : classArrayList) {
             regMethod(className, clazz, o);
@@ -139,6 +136,19 @@ public class Producer {
             ROUTING_TABLE.put(string, bean);
             serviceIdentifier(string);
         }
+    }
+    private List<Class<?>> getAllClass(Class<?> clazz) {
+        LinkedList<Class<?>> queue = new LinkedList<>();
+        queue.add(clazz);
+        ArrayList<Class<?>> list = new ArrayList<>();
+        Class<?> poll = null;
+        for (; ; ) {
+            poll = queue.poll();
+            if (poll == null) break;
+            list.add(poll);
+            queue.addAll(Arrays.asList(poll.getInterfaces()));
+        }
+        return list;
     }
 
     public static final class Builder {
