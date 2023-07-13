@@ -16,6 +16,7 @@ public interface Constants {
     //ms
     long authenticationWaitTime = 3000;
     String SpringCGLib = "$$SpringCGLIB$$";
+    String JDK_PROXY = "jdk.proxy";
     String SpringCGLibRegx = "[$]{2}SpringCGLIB[$]{2}";
 
     List<String> specialMethod = Arrays.asList("toString", "hashcode", "equals");

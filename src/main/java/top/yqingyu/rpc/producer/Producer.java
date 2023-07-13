@@ -11,6 +11,8 @@ import top.yqingyu.rpc.util.RpcUtil;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -45,31 +47,35 @@ public class Producer {
      * 服局将采用此对象执行相应的方法
      */
     public void register(Object o) throws ClassNotFoundException {
+        ArrayList<Class<?>> classArrayList = new ArrayList<>();
         Class<?> aClass = o.getClass();
+        classArrayList.add(aClass);
         QyRpcProducer annotation = aClass.getAnnotation(QyRpcProducer.class);
+        Class<?> interface_ = null;
+        if (annotation == null) {
+            for (Class<?> anInterface : aClass.getInterfaces()) {
+                annotation = anInterface.getAnnotation(QyRpcProducer.class);
+                interface_ = anInterface;
+                if (annotation != null) break;
+            }
+        }
         if (annotation == null) return;
         String className = RpcUtil.getClassName(aClass);
         if (className.contains(Constants.SpringCGLib)) {
             String[] split = className.split(Constants.SpringCGLibRegx);
             aClass = Class.forName(split[0]);
+            classArrayList.add(aClass);
+            Class<?>[] interfaces = aClass.getInterfaces();
+            classArrayList.addAll(Arrays.asList(interfaces));
             className = RpcUtil.getClassName(aClass);
         }
-        Method[] methods = aClass.getDeclaredMethods();
-        for (Method method : methods) {
-            StringBuilder sb = new StringBuilder(className).append(Constants.method).append(method.getName());
-            if (method.trySetAccessible()) {
-                method.setAccessible(true);
-            }
-            Class<?>[] parameterTypes = method.getParameterTypes();
-            for (Class<?> parameterType : parameterTypes) {
-                sb.append(Constants.param).append(parameterType.getName());
-            }
-            Bean bean = new Bean();
-            bean.method = method;
-            bean.object = o;
-            String string = sb.toString();
-            ROUTING_TABLE.put(string, bean);
-            serviceIdentifier(string);
+        if (interface_ != null && className.contains(Constants.JDK_PROXY)) {
+            className = interface_.getName();
+            Class<?>[] interfaces = interface_.getInterfaces();
+            classArrayList.addAll(Arrays.asList(interfaces));
+        }
+        for (Class<?> clazz : classArrayList) {
+            regMethod(className, clazz, o);
         }
     }
 
@@ -112,6 +118,26 @@ public class Producer {
         int min = Math.min(bytes.length, serviceIdentifierTag.length);
         for (int i = 0; i < min; i++) {
             serviceIdentifierTag[i] = (byte) (serviceIdentifierTag[i] | bytes[i]);
+        }
+    }
+
+    private void regMethod(String className, Class<?> aClass, Object invoke) {
+        Method[] methods = aClass.getDeclaredMethods();
+        for (Method method : methods) {
+            StringBuilder sb = new StringBuilder(className).append(Constants.method).append(method.getName());
+            if (method.trySetAccessible()) {
+                method.setAccessible(true);
+            }
+            Class<?>[] parameterTypes = method.getParameterTypes();
+            for (Class<?> parameterType : parameterTypes) {
+                sb.append(Constants.param).append(parameterType.getName());
+            }
+            Bean bean = new Bean();
+            bean.method = method;
+            bean.object = invoke;
+            String string = sb.toString();
+            ROUTING_TABLE.put(string, bean);
+            serviceIdentifier(string);
         }
     }
 
