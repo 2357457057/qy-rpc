@@ -31,11 +31,6 @@ public class ConsumerHolderContext {
         this.rpcLinkId = new RpcLinkId();
     }
 
-    public ConsumerHolderContext(MethodExecuteInterceptor methodExecuteInterceptor) {
-        this.methodExecuteInterceptor = methodExecuteInterceptor;
-        this.rpcLinkId = new RpcLinkId();
-    }
-
     void addConsumer(Consumer consumer) throws Exception {
         Connection connection = consumer.getClient().getConnection();
         String name = consumer.getName();
