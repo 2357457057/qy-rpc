@@ -2,6 +2,9 @@ package top.yqingyu.rpc.consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import top.yqingyu.common.cglib.core.ClassLoaderAwareGeneratorStrategy;
+import top.yqingyu.common.cglib.core.QyNamingPolicy;
+import top.yqingyu.common.cglib.proxy.Enhancer;
 import top.yqingyu.qymsg.DataType;
 import top.yqingyu.qymsg.MsgHelper;
 import top.yqingyu.qymsg.MsgType;
@@ -9,6 +12,7 @@ import top.yqingyu.qymsg.QyMsg;
 import top.yqingyu.qymsg.netty.Connection;
 import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.exception.NoSuchHolderException;
+import top.yqingyu.rpc.util.RpcUtil;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,9 +21,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConsumerHolderContext {
 
     private static final Logger logger = LoggerFactory.getLogger(ConsumerHolderContext.class);
+    final ConcurrentHashMap<Class<?>, Object> ProxyClassCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ConsumerHolder> CONSUMER_MAP = new ConcurrentHashMap<>();
     final RpcLinkId rpcLinkId;
-    MethodExecuteInterceptor methodExecuteInterceptor = new MethodExecuteInterceptor() {
+    volatile MethodExecuteInterceptor methodExecuteInterceptor = new MethodExecuteInterceptor() {
     };
 
     public ConsumerHolderContext() {
@@ -54,8 +59,22 @@ public class ConsumerHolderContext {
         return consumerHolder;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getProxy(String consumerName, Class<T> clazz) {
-        return getConsumerHolder(consumerName).getProxy(clazz);
+        if (ProxyClassCache.containsKey(clazz)) {
+            return (T) ProxyClassCache.get(clazz);
+        }
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(clazz);
+        enhancer.setNamingPolicy(QyNamingPolicy.INSTANCE);
+        enhancer.setCallback(new ProxyClassMethodExecutor(clazz, consumerName, this));
+        enhancer.setAttemptLoad(true);
+        ClassLoader classLoader = RpcUtil.getClassLoader(clazz);
+        if (classLoader != null)
+            enhancer.setStrategy(new ClassLoaderAwareGeneratorStrategy(classLoader));
+        T t = (T) enhancer.create();
+        ProxyClassCache.put(clazz, t);
+        return t;
     }
 
     public void shutdown() {
@@ -78,5 +97,9 @@ public class ConsumerHolderContext {
 
     public void setLinkId(String th, String id) {
         rpcLinkId.setLinkId(th, id);
+    }
+
+    public void setMethodExecuteInterceptor(MethodExecuteInterceptor methodExecuteInterceptor) {
+        this.methodExecuteInterceptor = methodExecuteInterceptor;
     }
 }

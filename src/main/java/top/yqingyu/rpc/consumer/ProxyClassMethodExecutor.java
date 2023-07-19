@@ -22,6 +22,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
 
     public static final Logger logger = LoggerFactory.getLogger(ProxyClassMethodExecutor.class);
     Class<?> proxyClass;
+    String holderName;
     ConsumerHolder holder;
     ConsumerHolderContext ctx;
     MethodExecuteInterceptor interceptor;
@@ -31,15 +32,19 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
     ConcurrentHashMap<Method, Object> specialMethodNameCache = new ConcurrentHashMap<>();
     final static Boolean b = false;
 
-    public ProxyClassMethodExecutor(Class<?> proxyClass, ConsumerHolder holder) {
+    public ProxyClassMethodExecutor(Class<?> proxyClass, String consumerName, ConsumerHolderContext ctx) {
         this.proxyClass = proxyClass;
-        this.holder = holder;
-        ctx = holder.ctx;
+        this.ctx = ctx;
+        holderName = consumerName;
         interceptor = ctx.methodExecuteInterceptor;
     }
 
     @Override
     public Object intercept(Object obj, Method method, Object[] param, MethodProxy proxy) throws Throwable {
+        if (holder == null) {
+            holder = ctx.getConsumerHolder(holderName);
+            if (holder == null) throw new RpcException("No consumer named {} was initialized please check", holderName);
+        }
         interceptor.before(ctx, method, param);
         Object result = specialMethodNameCache.get(method);
         if (result != null) {
