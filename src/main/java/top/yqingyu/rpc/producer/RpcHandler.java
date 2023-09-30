@@ -1,6 +1,8 @@
 package top.yqingyu.rpc.producer;
 
 import io.netty.channel.ChannelHandlerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import top.yqingyu.common.qydata.DataMap;
 import top.yqingyu.qymsg.DataType;
 import top.yqingyu.qymsg.MsgHelper;
@@ -16,6 +18,7 @@ public class RpcHandler extends QyMsgServerHandler {
     final ConcurrentHashMap<String, Bean> ROUTING_TABLE;
     final ServerExceptionHandler serverExceptionHandler;
     final Producer producer;
+    public static final Logger logger = LoggerFactory.getLogger(RpcHandler.class);
 
     public RpcHandler(Producer producer) {
         ROUTING_TABLE = producer.ROUTING_TABLE;
@@ -49,6 +52,7 @@ public class RpcHandler extends QyMsgServerHandler {
         }
         String s = MsgHelper.gainMsg(msg);
         Bean bean = ROUTING_TABLE.get(s);
+        logger.debug("from:{} invoke:{}", msg.getFrom(), s);
         if (bean == null) {
             qyMsg.putMsg(Constants.invokeNoSuch);
             return qyMsg;
@@ -64,6 +68,7 @@ public class RpcHandler extends QyMsgServerHandler {
             qyMsg.putMsgData(Constants.invokeResult, e);
             serverExceptionHandler.exceptionCallBack(ctx.channel().remoteAddress(), msg, e);
         }
+        logger.debug("from:{} invoked:{}", msg.getFrom(), qyMsg);
         return qyMsg;
     }
 }

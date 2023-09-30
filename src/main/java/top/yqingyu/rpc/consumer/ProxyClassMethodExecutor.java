@@ -16,6 +16,7 @@ import top.yqingyu.rpc.exception.RpcException;
 import top.yqingyu.rpc.util.RpcUtil;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ProxyClassMethodExecutor implements MethodInterceptor {
@@ -55,9 +56,10 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         if (StringUtil.isEmpty(string)) {
             String className = RpcUtil.getClassName(proxyClass);
             String name = method.getName();
+
             StringBuilder sb = new StringBuilder(className).append(Constants.method).append(name);
-            if (param != null) for (Object o : param) {
-                sb.append("#").append(o.getClass().getName());
+            if (param != null) for (Class<?> o : method.getParameterTypes()) {
+                sb.append("#").append(o.getName());
             }
             string = sb.toString();
             methodNameCache.put(method, string);
@@ -98,8 +100,10 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                 qyMsg.putMsg(string);
                 if (consumer == null) continue;
                 qyMsg.setFrom(consumer.getId());
+                logger.debug("send invoke: {}", string);
                 QyMsg back = get(wait, consumer, qyMsg, waitTime);
                 String type = MsgHelper.gainMsg(back);
+                logger.debug("get invoke: {}", back.toString());
                 switch (type) {
                     case Constants.invokeSuccess -> {
                         result = back.getDataMap().get(Constants.invokeResult);
@@ -127,7 +131,9 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         qyMsg.putMsg(string);
         if (consumer != null) {
             qyMsg.setFrom(consumer.getId());
+            logger.debug("send invoke: {}", string);
             QyMsg back = get(wait, consumer, qyMsg, waitTime);
+            logger.debug("get invoke: {}", back.toString());
             String type = MsgHelper.gainMsg(back);
             switch (type) {
                 case Constants.invokeSuccess -> {
