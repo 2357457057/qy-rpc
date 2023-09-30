@@ -12,11 +12,11 @@ import top.yqingyu.qymsg.QyMsg;
 import top.yqingyu.qymsg.netty.Connection;
 import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.annontation.QyRpcProducerProperties;
+import top.yqingyu.rpc.exception.RpcTimeOutException;
 import top.yqingyu.rpc.exception.RpcException;
 import top.yqingyu.rpc.util.RpcUtil;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ProxyClassMethodExecutor implements MethodInterceptor {
@@ -186,7 +186,18 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
 
     private static QyMsg get(boolean b, Consumer consumer, QyMsg in, long time) throws Exception {
         Connection connection = consumer.getClient().getConnection();
-        return b ? connection.get(in, time) : connection.get(in);
+        if (b){
+            QyMsg qyMsg = connection.get(in, time);
+            if (qyMsg == null){
+                throw new RpcTimeOutException("rpc invoke time out time {}", time);
+            }
+            return qyMsg;
+        }
+        QyMsg qyMsg = connection.get(in);
+        if (qyMsg  == null){
+            throw new RpcException("can not receive back msg");
+        }
+        return qyMsg;
     }
 
     String proxyToString() {
