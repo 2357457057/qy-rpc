@@ -12,8 +12,8 @@ import top.yqingyu.qymsg.QyMsg;
 import top.yqingyu.qymsg.netty.Connection;
 import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.annontation.QyRpcProducerProperties;
-import top.yqingyu.rpc.exception.RpcTimeOutException;
 import top.yqingyu.rpc.exception.RpcException;
+import top.yqingyu.rpc.exception.RpcTimeOutException;
 import top.yqingyu.rpc.util.RpcUtil;
 
 import java.lang.reflect.Method;
@@ -103,14 +103,15 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                 logger.debug("send invoke: {}", string);
                 QyMsg back = get(wait, consumer, qyMsg, waitTime);
                 String type = MsgHelper.gainMsg(back);
-                logger.debug("get invoke: {}", back.toString());
                 switch (type) {
                     case Constants.invokeSuccess -> {
+                        logger.debug("invokeSuccess: {}", string);
                         result = back.getDataMap().get(Constants.invokeResult);
                         interceptor.completely(ctx, method, param, result);
                         return result;
                     }
                     case Constants.invokeThrowError -> {
+                        logger.debug("invokeThrowError: {}", string);
                         Throwable error = new Throwable("remote process error", (Throwable) back.getDataMap().get(Constants.invokeResult));
                         interceptor.error(ctx, method, param, error);
                         if (retryTimes - 1 == i) {
@@ -119,6 +120,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                         logger.error("", error);
                     }
                     case Constants.invokeNoSuch -> {
+                        logger.debug("invokeNoSuch: {}", string);
                         interceptor.completely(ctx, method, param, result);
                         return invokeNoSuch(obj, method, param);
                     }
@@ -131,22 +133,24 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         qyMsg.putMsg(string);
         if (consumer != null) {
             qyMsg.setFrom(consumer.getId());
-            logger.debug("send invoke: {}", string);
+            logger.debug("invoke: {}", string);
             QyMsg back = get(wait, consumer, qyMsg, waitTime);
-            logger.debug("get invoke: {}", back.toString());
             String type = MsgHelper.gainMsg(back);
             switch (type) {
                 case Constants.invokeSuccess -> {
                     result = back.getDataMap().get(Constants.invokeResult);
+                    logger.debug("invokeSuccess : {}", string);
                     interceptor.completely(ctx, method, param, result);
                     return result;
                 }
                 case Constants.invokeNoSuch -> {
+                    logger.debug("invokeNoSuch: {}", string);
                     interceptor.completely(ctx, method, param, result);
                     return invokeNoSuch(obj, method, param);
                 }
                 case Constants.invokeThrowError -> {
                     Throwable error = new Throwable("remote process error", (Throwable) back.getDataMap().get(Constants.invokeResult));
+                    logger.debug("invokeThrowError: {}", string);
                     interceptor.error(ctx, method, param, error);
                     throw error;
                 }
@@ -186,15 +190,15 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
 
     private static QyMsg get(boolean b, Consumer consumer, QyMsg in, long time) throws Exception {
         Connection connection = consumer.getClient().getConnection();
-        if (b){
+        if (b) {
             QyMsg qyMsg = connection.get(in, time);
-            if (qyMsg == null){
+            if (qyMsg == null) {
                 throw new RpcTimeOutException("rpc invoke time out time {}", time);
             }
             return qyMsg;
         }
         QyMsg qyMsg = connection.get(in);
-        if (qyMsg  == null){
+        if (qyMsg == null) {
             throw new RpcException("can not receive back msg");
         }
         return qyMsg;
