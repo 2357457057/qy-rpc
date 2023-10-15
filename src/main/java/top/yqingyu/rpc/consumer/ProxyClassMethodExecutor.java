@@ -5,10 +5,7 @@ import org.slf4j.LoggerFactory;
 import top.yqingyu.common.cglib.proxy.MethodInterceptor;
 import top.yqingyu.common.cglib.proxy.MethodProxy;
 import top.yqingyu.common.utils.StringUtil;
-import top.yqingyu.qymsg.DataType;
-import top.yqingyu.qymsg.MsgHelper;
-import top.yqingyu.qymsg.MsgType;
-import top.yqingyu.qymsg.QyMsg;
+import top.yqingyu.qymsg.*;
 import top.yqingyu.qymsg.socket.Connection;
 import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.annontation.QyRpcProducerProperties;
@@ -95,13 +92,13 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         if (retry) {
             Consumer consumer = null;
             for (int i = 0; i < retryTimes; i++) {
-                if (consumer == null || retryDiff)
-                    consumer = holder.next();
+                if (consumer == null || retryDiff) consumer = holder.next();
                 qyMsg.putMsg(string);
                 if (consumer == null) continue;
                 qyMsg.setFrom(consumer.getId());
                 logger.debug("send invoke: {}", string);
                 QyMsg back = get(wait, consumer, qyMsg, waitTime);
+                remoteProcessError(back, string, e -> interceptor.error(ctx, method, param, e));
                 String type = MsgHelper.gainMsg(back);
                 switch (type) {
                     case Constants.invokeSuccess -> {
@@ -135,6 +132,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
             qyMsg.setFrom(consumer.getId());
             logger.debug("invoke: {}", string);
             QyMsg back = get(wait, consumer, qyMsg, waitTime);
+            remoteProcessError(back, string, e -> interceptor.error(ctx, method, param, e));
             String type = MsgHelper.gainMsg(back);
             switch (type) {
                 case Constants.invokeSuccess -> {
@@ -179,8 +177,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         if ("equals".equals(methodName)) {
             trn = proxyEquals(obj, param);
         }
-        if (trn != null)
-            specialMethodNameCache.put(method, trn);
+        if (trn != null) specialMethodNameCache.put(method, trn);
         return trn;
     }
 
@@ -190,14 +187,15 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
 
     private static QyMsg get(boolean b, Consumer consumer, QyMsg in, long time) throws Exception {
         Connection connection = consumer.getClient().getConnection();
+        QyMsg qyMsg;
         if (b) {
-            QyMsg qyMsg = connection.get(in, time);
+            qyMsg = connection.get(in, time);
             if (qyMsg == null) {
                 throw new RpcTimeOutException("rpc invoke time out time {}", time);
             }
             return qyMsg;
         }
-        QyMsg qyMsg = connection.get(in);
+        qyMsg = connection.get(in);
         if (qyMsg == null) {
             throw new RpcException("can not receive back msg");
         }
@@ -208,13 +206,26 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         return proxyClass.getSimpleName() + "@" + proxyHashCode();
     }
 
+    void remoteProcessError(QyMsg back, String invokeTarget, java.util.function.Consumer<RpcException> consumer) {
+        if (MsgType.ERR_MSG.equals(back.getMsgType())) {
+            Object o = back.getDataMap().get(Dict.ERR_MSG_EXCEPTION);
+            if (o != null) {
+                RpcException rpcException = new RpcException((Exception) o, "remote process error, {} , invokeTarget:{}", Dict.ERR_MSG_EXCEPTION, invokeTarget);
+                consumer.accept(rpcException);
+                throw rpcException;
+            }
+            RpcException rpcException = new RpcException("remote process error, invokeTarget:{}", invokeTarget);
+            consumer.accept(rpcException);
+            throw rpcException;
+        }
+    }
+
     int proxyHashCode() {
         return this.hashCode();
     }
 
     boolean proxyEquals(Object obj, Object[] param) {
-        if (param == null)
-            return false;
+        if (param == null) return false;
         return obj.equals(param[0]);
     }
 
