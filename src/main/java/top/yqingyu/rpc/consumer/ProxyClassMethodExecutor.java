@@ -207,14 +207,15 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
     }
 
     void remoteProcessError(QyMsg back, String invokeTarget, java.util.function.Consumer<RpcException> consumer) {
+        String gainMsg = MsgHelper.gainMsg(back);
         if (MsgType.ERR_MSG.equals(back.getMsgType())) {
             Object o = back.getDataMap().get(Dict.ERR_MSG_EXCEPTION);
             if (o != null) {
-                RpcException rpcException = new RpcException((Exception) o, "remote process error, {} , invokeTarget:{}", Dict.ERR_MSG_EXCEPTION, invokeTarget);
+                RpcException rpcException = new RpcException((Exception) o, "remote process error, {} , invokeTarget:{}", gainMsg, invokeTarget);
                 consumer.accept(rpcException);
                 throw rpcException;
             }
-            RpcException rpcException = new RpcException("remote process error, invokeTarget:{}", invokeTarget);
+            RpcException rpcException = new RpcException("remote process error, {} , invokeTarget:{}", gainMsg, invokeTarget);
             consumer.accept(rpcException);
             throw rpcException;
         }
