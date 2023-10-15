@@ -9,7 +9,7 @@ import top.yqingyu.qymsg.DataType;
 import top.yqingyu.qymsg.MsgHelper;
 import top.yqingyu.qymsg.MsgType;
 import top.yqingyu.qymsg.QyMsg;
-import top.yqingyu.qymsg.socket.Connection;
+import top.yqingyu.qymsg.netty.Connection;
 import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.exception.NoSuchHolderException;
 import top.yqingyu.rpc.util.RpcUtil;

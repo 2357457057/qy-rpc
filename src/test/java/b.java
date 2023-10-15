@@ -1,6 +1,6 @@
 import lombok.extern.slf4j.Slf4j;
 
-import top.yqingyu.qymsg.socket.ConnectionConfig;
+import top.yqingyu.qymsg.netty.ConnectionConfig;
 import top.yqingyu.qyws.modules.web.mapper.ViewNumMapper;
 import top.yqingyu.rpc.consumer.Consumer;
 import top.yqingyu.rpc.consumer.ConsumerHolderContext;

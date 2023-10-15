@@ -2,8 +2,8 @@ package top.yqingyu.rpc.consumer;
 
 
 import top.yqingyu.common.utils.UUIDUtil;
-import top.yqingyu.qymsg.socket.ConnectionConfig;
-import top.yqingyu.qymsg.socket.MsgClient;
+import top.yqingyu.qymsg.netty.ConnectionConfig;
+import top.yqingyu.qymsg.netty.MsgClient;
 
 
 public class Consumer {

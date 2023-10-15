@@ -6,7 +6,7 @@ import top.yqingyu.common.cglib.proxy.MethodInterceptor;
 import top.yqingyu.common.cglib.proxy.MethodProxy;
 import top.yqingyu.common.utils.StringUtil;
 import top.yqingyu.qymsg.*;
-import top.yqingyu.qymsg.socket.Connection;
+import top.yqingyu.qymsg.netty.Connection;
 import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.annontation.QyRpcProducerProperties;
 import top.yqingyu.rpc.exception.RpcException;
