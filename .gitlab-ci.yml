@@ -6,9 +6,9 @@ git_sync:
   stage: git_sync
   script: 
     - cd /data/mycode/qyrpc
-    - git pull gitlab master
-    - git push gitee master
-    - git push github master
+    - git pull gitlab master:master
+    - git push --mirror gitee
+    - git push --mirror github
 
 build-job:       # This job runs in the build stage, which runs first.
   stage: install
