@@ -12,6 +12,8 @@ public interface Constants {
     String invokeNoSuch = "1";
     String invokeThrowError = "2";
     String invokeResult = "invokeResult";
+    String invokeErrorClass = "invokeErrorClass";
+    String invokeErrorMessage = "invokeErrorMessage";
     String serviceIdentifierTag = "serviceIdentifierTag";
     //ms
     long authenticationWaitTime = 3000;

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -13,6 +14,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TD_S_WEBSITE_ACCESS implements Serializable {
+    @Serial
+    private static final long serialVersionUID = -888972979338249806L;
     private String ID;
     private LocalDateTime ACCESS_TIME;
     private String HOST;

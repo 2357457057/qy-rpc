@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.yqingyu.common.qydata.DataMap;
+import top.yqingyu.common.utils.StringUtil;
 import top.yqingyu.qymsg.DataType;
 import top.yqingyu.qymsg.MsgHelper;
 import top.yqingyu.qymsg.MsgType;
@@ -11,6 +12,8 @@ import top.yqingyu.qymsg.QyMsg;
 import top.yqingyu.qymsg.netty.QyMsgServerHandler;
 import top.yqingyu.rpc.Constants;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -50,9 +53,9 @@ public class RpcHandler extends QyMsgServerHandler {
         if (MsgType.HEART_BEAT.equals(msg.getMsgType())) {
             return null;
         }
+        logger.debug("invoke from:{} data:{}", msg.getFrom(), qyMsg);
         String s = MsgHelper.gainMsg(msg);
         Bean bean = ROUTING_TABLE.get(s);
-        logger.debug("from:{} invoke:{}", msg.getFrom(), s);
         if (bean == null) {
             qyMsg.putMsg(Constants.invokeNoSuch);
             return qyMsg;
@@ -64,11 +67,20 @@ public class RpcHandler extends QyMsgServerHandler {
             qyMsg.putMsg(Constants.invokeSuccess);
             qyMsg.putMsgData(Constants.invokeResult, invoke);
         } catch (Throwable e) {
+            Throwable cause = e.getCause();
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            cause.printStackTrace(new PrintStream(outputStream));
+            String name = cause.getClass().getName();
+            String message = cause.getMessage();
+
             qyMsg.putMsg(Constants.invokeThrowError);
-            qyMsg.putMsgData(Constants.invokeResult, e);
+            qyMsg.putMsgData(Constants.invokeResult, outputStream.toString(StandardCharsets.UTF_8));
+            qyMsg.putMsgData(Constants.invokeErrorClass, name);
+            qyMsg.putMsgData(Constants.invokeErrorMessage, StringUtil.isEmpty(message) ? "" : message);
             serverExceptionHandler.exceptionCallBack(ctx.channel().remoteAddress(), msg, e);
         }
-        logger.debug("from:{} invoked:{}", msg.getFrom(), qyMsg);
+        logger.debug("invoked from:{} data:{}", msg.getFrom(), qyMsg);
         return qyMsg;
     }
+
 }

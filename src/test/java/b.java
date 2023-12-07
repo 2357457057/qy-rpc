@@ -1,7 +1,7 @@
 import lombok.extern.slf4j.Slf4j;
-
+import top.yqingyu.A;
 import top.yqingyu.qymsg.netty.ConnectionConfig;
-import top.yqingyu.qyws.modules.web.mapper.ViewNumMapper;
+import top.yqingyu.qyws.modules.web.service.ViewNumService;
 import top.yqingyu.rpc.consumer.Consumer;
 import top.yqingyu.rpc.consumer.ConsumerHolderContext;
 
@@ -10,20 +10,31 @@ public class b {
 
     public static void main(String[] args) throws Throwable {
         ConsumerHolderContext consumerHolderContext = new ConsumerHolderContext();
-        ConnectionConfig build = new ConnectionConfig.Builder().port(4736).build();
+        ConnectionConfig build = new ConnectionConfig.Builder()
+//                .host("192.168.50.68")
+                .port(4737)
+                .build();
         Consumer consumer = Consumer.create(build, consumerHolderContext);
-        ViewNumMapper proxy = consumerHolderContext.getProxy(consumer.getName(), ViewNumMapper.class);
+        A proxy = consumerHolderContext.getProxy(consumer.getName(), A.class);
+        proxy.bbbb("轻语");
+    }
 
+    public static void remoteHandle(ConsumerHolderContext consumerHolderContext, Consumer consumer) {
+        ViewNumService proxy = consumerHolderContext.getProxy(consumer.getName(), ViewNumService.class);
         log.info(proxy.toString());
 
         consumerHolderContext.setLinkId("session5");
         log.info(proxy.getViewNum());
         consumerHolderContext.setLinkId("session2");
         log.info(proxy.getViewNum());
-        log.info("{}", proxy.getTD_S_WEBSITE_ACCESS("127.0.0.1"));
-        consumerHolderContext.setLinkId("session7");
-        log.info("{}", proxy.getTD_S_WEBSITE_ACCESS("127.0.0.1"));
-        consumerHolderContext.setLinkId("session4");
-        log.info("{}", proxy.getTD_S_WEBSITE_ACCESS("127.0.0.1"));
+        for (int i = 0; i < 10; i++) {
+            new Thread(() -> {
+                try {
+                    log.info("{}", proxy.getIpInfo("39.201.45.89"));
+                } catch (Exception e) {
+                    log.error("", e);
+                }
+            }).start();
+        }
     }
 }

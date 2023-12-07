@@ -7,6 +7,7 @@ import top.yqingyu.rpc.producer.Producer;
 public class A {
     public static void main(String[] args) throws Exception {
         Producer producer = Producer.Builder.newBuilder()
+                .port(4737)
                 .build();
         producer.start();
         producer.register(new A());

@@ -1,18 +1,23 @@
 package top.yqingyu.rpc.consumer;
 
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.yqingyu.common.cglib.proxy.MethodInterceptor;
 import top.yqingyu.common.cglib.proxy.MethodProxy;
+import top.yqingyu.common.qydata.DataMap;
 import top.yqingyu.common.utils.StringUtil;
 import top.yqingyu.qymsg.*;
 import top.yqingyu.qymsg.netty.Connection;
 import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.annontation.QyRpcProducerProperties;
+import top.yqingyu.rpc.exception.RemoteServerException;
 import top.yqingyu.rpc.exception.RpcException;
 import top.yqingyu.rpc.exception.RpcTimeOutException;
 import top.yqingyu.rpc.util.RpcUtil;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,8 +54,8 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
             interceptor.completely(ctx, method, param, result);
             return result;
         }
-        String string = methodNameCache.get(method);
-        if (StringUtil.isEmpty(string)) {
+        String methodStrName = methodNameCache.get(method);
+        if (StringUtil.isEmpty(methodStrName)) {
             String className = RpcUtil.getClassName(proxyClass);
             String name = method.getName();
 
@@ -58,8 +63,8 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
             if (param != null) for (Class<?> o : method.getParameterTypes()) {
                 sb.append("#").append(o.getName());
             }
-            string = sb.toString();
-            methodNameCache.put(method, string);
+            methodStrName = sb.toString();
+            methodNameCache.put(method, methodStrName);
         }
 
         boolean retry = false;
@@ -90,76 +95,117 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         qyMsg.putMsgData(Constants.parameterList, param);
         qyMsg.putMsgData(Constants.linkId, holder.ctx.rpcLinkId.getLinkId());
         if (retry) {
-            Consumer consumer = null;
-            for (int i = 0; i < retryTimes; i++) {
-                if (consumer == null || retryDiff) consumer = holder.next();
-                qyMsg.putMsg(string);
-                if (consumer == null) continue;
-                qyMsg.setFrom(consumer.getId());
-                logger.debug("send invoke: {}", string);
-                QyMsg back = get(wait, consumer, qyMsg, waitTime);
-                remoteProcessError(back, string, e -> interceptor.error(ctx, method, param, e));
-                String type = MsgHelper.gainMsg(back);
-                switch (type) {
-                    case Constants.invokeSuccess -> {
-                        logger.debug("invokeSuccess: {}", string);
-                        result = back.getDataMap().get(Constants.invokeResult);
-                        interceptor.completely(ctx, method, param, result);
-                        return result;
-                    }
-                    case Constants.invokeThrowError -> {
-                        logger.debug("invokeThrowError: {}", string);
-                        Throwable error = new Throwable("remote process error", (Throwable) back.getDataMap().get(Constants.invokeResult));
-                        interceptor.error(ctx, method, param, error);
-                        if (retryTimes - 1 == i) {
-                            throw error;
-                        }
-                        logger.error("", error);
-                    }
-                    case Constants.invokeNoSuch -> {
-                        logger.debug("invokeNoSuch: {}", string);
-                        interceptor.completely(ctx, method, param, result);
-                        return invokeNoSuch(obj, method, param);
-                    }
-                }
-            }
-            interceptor.completely(ctx, method, param, result);
+            return handleRetryMode(obj, method, param, retryTimes, retryDiff, qyMsg, methodStrName, wait, waitTime);
+        }
+        return handleOnceMode(obj, method, param, qyMsg, methodStrName, wait, waitTime);
+    }
+
+    @Nullable
+    private Object handleOnceMode(Object obj, Method method, Object[] param, QyMsg qyMsg, String methodStrName, boolean wait, long waitTime) throws Throwable {
+        Consumer consumer = holder.next();
+        if (consumer == null) {
+            logger.warn("cannot gen can used consumer");
             return null;
         }
-        Consumer consumer = holder.next();
-        qyMsg.putMsg(string);
-        if (consumer != null) {
+
+        qyMsg.putMsg(methodStrName);
+        Object result = null;
+        qyMsg.setFrom(consumer.getId());
+        logger.debug("invoke: {}", methodStrName);
+        QyMsg back = get(wait, consumer, qyMsg, waitTime);
+        remoteProcessError(back, methodStrName, e -> interceptor.error(ctx, method, param, e));
+        String type = MsgHelper.gainMsg(back);
+        switch (type) {
+            case Constants.invokeSuccess -> {
+                result = back.getDataMap().get(Constants.invokeResult);
+                logger.debug("invokeSuccess : {}", methodStrName);
+                interceptor.completely(ctx, method, param, result);
+                return result;
+            }
+            case Constants.invokeNoSuch -> {
+                logger.debug("invokeNoSuch: {}", methodStrName);
+                interceptor.completely(ctx, method, param, result);
+                return invokeNoSuch(obj, method, param);
+            }
+            case Constants.invokeThrowError -> {
+                Throwable error = handleRemoteException(method, methodStrName, back);
+                interceptor.error(ctx, method, param, error);
+                throw error;
+            }
+            default -> {
+                RpcException rpcException = new RpcException("unknown type {}", type);
+                interceptor.error(ctx, method, param, rpcException);
+                throw rpcException;
+            }
+        }
+    }
+
+    @Nullable
+    private Object handleRetryMode(Object obj, Method method, Object[] param, int retryTimes, boolean retryDiff, QyMsg qyMsg, String methodStrName, boolean wait, long waitTime) throws Throwable {
+        Object result = null;
+        Consumer consumer = null;
+        for (int i = 0; i < retryTimes; i++) {
+            if (consumer == null || retryDiff) consumer = holder.next();
+            if (consumer == null) {
+                logger.warn("cannot gen can used consumer");
+                continue;
+            }
+            qyMsg.putMsg(methodStrName);
             qyMsg.setFrom(consumer.getId());
-            logger.debug("invoke: {}", string);
+            logger.debug("send invoke: {}", methodStrName);
             QyMsg back = get(wait, consumer, qyMsg, waitTime);
-            remoteProcessError(back, string, e -> interceptor.error(ctx, method, param, e));
+            remoteProcessError(back, methodStrName, e -> interceptor.error(ctx, method, param, e));
             String type = MsgHelper.gainMsg(back);
             switch (type) {
                 case Constants.invokeSuccess -> {
+                    logger.debug("invokeSuccess: {}", methodStrName);
                     result = back.getDataMap().get(Constants.invokeResult);
-                    logger.debug("invokeSuccess : {}", string);
                     interceptor.completely(ctx, method, param, result);
                     return result;
                 }
+                case Constants.invokeThrowError -> {
+                    Throwable error = handleRemoteException(method, methodStrName, back);
+                    interceptor.error(ctx, method, param, error);
+                    if (retryTimes - 1 == i) {
+                        throw error;
+                    }
+                    logger.error("", error);
+                }
                 case Constants.invokeNoSuch -> {
-                    logger.debug("invokeNoSuch: {}", string);
+                    logger.debug("invokeNoSuch: {}", methodStrName);
                     interceptor.completely(ctx, method, param, result);
                     return invokeNoSuch(obj, method, param);
                 }
-                case Constants.invokeThrowError -> {
-                    Throwable error = new Throwable("remote process error", (Throwable) back.getDataMap().get(Constants.invokeResult));
-                    logger.debug("invokeThrowError: {}", string);
-                    interceptor.error(ctx, method, param, error);
-                    throw error;
-                }
-                default -> {
-                    RpcException rpcException = new RpcException("unknown type {}", type);
-                    interceptor.error(ctx, method, param, rpcException);
-                    throw rpcException;
-                }
             }
         }
+        interceptor.completely(ctx, method, param, result);
         return null;
+    }
+
+    private Throwable handleRemoteException(Method method, String methodStrName, QyMsg back) {
+        logger.debug("invokeThrowError: {}", methodStrName);
+        DataMap bodyData = back.getDataMap();
+        String errorClass = bodyData.getString(Constants.invokeErrorClass);
+        String errorMessage = bodyData.getString(Constants.invokeErrorMessage);
+        logger.error("Error from remote server,{} {}: {}\n{}", holderName, errorClass, errorMessage, bodyData.getString(Constants.invokeResult));
+        if (StringUtil.isNotEmpty(errorClass)) {
+            try {
+                Class<?> aClass = Class.forName(errorClass);
+                try {
+                    Constructor<?> declaredConstructor = aClass.getDeclaredConstructor(String.class);
+                    declaredConstructor.setAccessible(true);
+                    return (Throwable) declaredConstructor.newInstance(StringUtil.fillBrace("Anomaly simulation for remote servers {}: {}", errorClass, errorMessage));
+                } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
+                         InvocationTargetException ignored) {
+                    Constructor<?> declaredConstructor = aClass.getDeclaredConstructor();
+                    declaredConstructor.setAccessible(true);
+                    return (Throwable) declaredConstructor.newInstance();
+                }
+            } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException |
+                     InvocationTargetException ignored) {
+            }
+        }
+        return new RemoteServerException("remote server {} process error and can't simulate remote server exception", holder);
     }
 
     private Object invokeNoSuch(Object obj, Method method, Object[] param) {
