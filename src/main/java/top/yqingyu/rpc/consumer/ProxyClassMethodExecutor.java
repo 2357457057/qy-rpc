@@ -187,14 +187,14 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         DataMap bodyData = back.getDataMap();
         String errorClass = bodyData.getString(Constants.invokeErrorClass);
         String errorMessage = bodyData.getString(Constants.invokeErrorMessage);
-        logger.error("Error from remote server,{} {}: {}\n{}", holderName, errorClass, errorMessage, bodyData.getString(Constants.invokeResult));
+        logger.error("Error from remote server {},>>>{}: {}\n{}", holderName, errorClass, errorMessage, bodyData.getString(Constants.invokeResult));
         if (StringUtil.isNotEmpty(errorClass)) {
             try {
                 Class<?> aClass = Class.forName(errorClass);
                 try {
                     Constructor<?> declaredConstructor = aClass.getDeclaredConstructor(String.class);
                     declaredConstructor.setAccessible(true);
-                    return (Throwable) declaredConstructor.newInstance(StringUtil.fillBrace("Anomaly simulation for remote servers {}: {}", errorClass, errorMessage));
+                    return (Throwable) declaredConstructor.newInstance(StringUtil.fillBrace("Anomaly simulation for remote server {},>>>{}: {}",holderName , errorClass, errorMessage));
                 } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
                          InvocationTargetException ignored) {
                     Constructor<?> declaredConstructor = aClass.getDeclaredConstructor();
@@ -205,7 +205,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                      InvocationTargetException ignored) {
             }
         }
-        return new RemoteServerException("remote server {} process error and can't simulate remote server exception", holder);
+        return new RemoteServerException("remote server {} process error and can't simulate remote server exception", holderName);
     }
 
     private Object invokeNoSuch(Object obj, Method method, Object[] param) {

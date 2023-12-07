@@ -1,5 +1,4 @@
 import lombok.extern.slf4j.Slf4j;
-import top.yqingyu.A;
 import top.yqingyu.qymsg.netty.ConnectionConfig;
 import top.yqingyu.qyws.modules.web.service.ViewNumService;
 import top.yqingyu.rpc.consumer.Consumer;
@@ -11,12 +10,13 @@ public class b {
     public static void main(String[] args) throws Throwable {
         ConsumerHolderContext consumerHolderContext = new ConsumerHolderContext();
         ConnectionConfig build = new ConnectionConfig.Builder()
-//                .host("192.168.50.68")
+                .host("192.168.50.68")
                 .port(4737)
                 .build();
         Consumer consumer = Consumer.create(build, consumerHolderContext);
-        A proxy = consumerHolderContext.getProxy(consumer.getName(), A.class);
-        proxy.bbbb("轻语");
+//        A proxy = consumerHolderContext.getProxy(consumer.getName(), A.class);
+//        proxy.bbbb("轻语");
+        remoteHandle(consumerHolderContext, consumer);
     }
 
     public static void remoteHandle(ConsumerHolderContext consumerHolderContext, Consumer consumer) {
@@ -30,7 +30,7 @@ public class b {
         for (int i = 0; i < 10; i++) {
             new Thread(() -> {
                 try {
-                    log.info("{}", proxy.getIpInfo("39.201.45.89"));
+                    log.info("{}", proxy.getIpInfo("96.201.45.89"));
                 } catch (Exception e) {
                     log.error("", e);
                 }
