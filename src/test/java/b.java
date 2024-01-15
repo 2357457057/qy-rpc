@@ -11,6 +11,8 @@ public class b {
         ConsumerHolderContext consumerHolderContext = new ConsumerHolderContext();
         ConnectionConfig build = new ConnectionConfig.Builder()
                 .host("192.168.50.68")
+                .poolMin(10)
+                .poolMax(10)
                 .port(4737)
                 .build();
         Consumer consumer = Consumer.create(build, consumerHolderContext);
@@ -30,6 +32,7 @@ public class b {
         for (int i = 0; i < 10; i++) {
             new Thread(() -> {
                 try {
+                    log.info(proxy.getViewNum());
                     log.info("{}", proxy.getIpInfo("96.201.45.89"));
                 } catch (Exception e) {
                     log.error("", e);

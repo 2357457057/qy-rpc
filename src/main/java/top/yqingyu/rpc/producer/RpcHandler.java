@@ -40,6 +40,7 @@ public class RpcHandler extends QyMsgServerHandler {
             deal.setDataType(msg.getDataType());
             deal.setMsgType(msg.getMsgType());
         }
+        Producer.RPC_LINK_ID.remove(Thread.currentThread().getName(), linkId);
         return deal;
     }
 
@@ -53,8 +54,8 @@ public class RpcHandler extends QyMsgServerHandler {
         if (MsgType.HEART_BEAT.equals(msg.getMsgType())) {
             return null;
         }
-        logger.debug("invoke from:{} data:{}", msg.getFrom(), qyMsg);
         String s = MsgHelper.gainMsg(msg);
+        logger.debug("invoke from:{} data:{}", msg.getFrom(), s);
         Bean bean = ROUTING_TABLE.get(s);
         if (bean == null) {
             qyMsg.putMsg(Constants.invokeNoSuch);
@@ -79,7 +80,7 @@ public class RpcHandler extends QyMsgServerHandler {
             qyMsg.putMsgData(Constants.invokeErrorMessage, StringUtil.isEmpty(message) ? "" : message);
             serverExceptionHandler.exceptionCallBack(ctx.channel().remoteAddress(), msg, e);
         }
-        logger.debug("invoked from:{} data:{}", msg.getFrom(), qyMsg);
+        logger.debug("invoked from:{} {}", msg.getFrom(), s);
         return qyMsg;
     }
 
