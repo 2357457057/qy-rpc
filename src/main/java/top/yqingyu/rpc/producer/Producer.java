@@ -106,7 +106,9 @@ public class Producer {
     }
 
     public void shutdown() throws InterruptedException {
-        this.msgServer.shutdown();
+        if (msgServer != null) {
+            this.msgServer.shutdown();
+        }
         logger.info("qyrpc producer is shutdown");
     }
 
