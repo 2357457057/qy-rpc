@@ -22,7 +22,7 @@ public class Producer {
     byte[] serviceIdentifierTag = "QyRpcProducer".repeat(24).getBytes();
     final ConcurrentHashMap<String, Bean> ROUTING_TABLE = new ConcurrentHashMap<>();
     static final ConcurrentHashMap<String, String> RPC_LINK_ID = new ConcurrentHashMap<>();
-    MsgServer msgServer;
+    volatile MsgServer msgServer;
     final String serverName;
     final ServerExceptionHandler exceptionHandler;
     private final int pool;
@@ -106,7 +106,7 @@ public class Producer {
     }
 
     public void shutdown() throws InterruptedException {
-        msgServer.shutdown();
+        this.msgServer.shutdown();
         logger.info("qyrpc producer is shutdown");
     }
 
@@ -137,6 +137,7 @@ public class Producer {
             serviceIdentifier(string);
         }
     }
+
     private List<Class<?>> getAllClass(Class<?> clazz) {
         LinkedList<Class<?>> queue = new LinkedList<>();
         queue.add(clazz);
