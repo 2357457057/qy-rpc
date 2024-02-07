@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Producer {
     public static final Logger logger = LoggerFactory.getLogger(Producer.class);
-    byte[] serviceIdentifierTag = "QyRpcProducer".repeat(24).getBytes();
+    static int serviceIdentifierTag = "QyRpcProducer".hashCode();
     final ConcurrentHashMap<String, Bean> ROUTING_TABLE = new ConcurrentHashMap<>();
     static final ConcurrentHashMap<String, String> RPC_LINK_ID = new ConcurrentHashMap<>();
     volatile MsgServer msgServer;
@@ -113,11 +113,7 @@ public class Producer {
     }
 
     void serviceIdentifier(String s) {
-        byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
-        int min = Math.min(bytes.length, serviceIdentifierTag.length);
-        for (int i = 0; i < min; i++) {
-            serviceIdentifierTag[i] = (byte) (serviceIdentifierTag[i] | bytes[i]);
-        }
+        serviceIdentifierTag ^= s.hashCode();
     }
 
     private void regMethod(String className, Class<?> aClass, Object invoke) {

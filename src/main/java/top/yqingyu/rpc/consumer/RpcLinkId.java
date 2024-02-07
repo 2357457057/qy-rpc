@@ -2,7 +2,7 @@ package top.yqingyu.rpc.consumer;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class RpcLinkId {
+class RpcLinkId {
     ConcurrentHashMap<String, String> RPC_LINK_ID_MAP = new ConcurrentHashMap<>();
 
     void setLinkId(String id) {
@@ -21,4 +21,11 @@ public class RpcLinkId {
         return RPC_LINK_ID_MAP.get(th);
     }
 
+    void removeLinkId(String th) {
+        RPC_LINK_ID_MAP.remove(th);
+    }
+
+    void removeLinkId() {
+        removeLinkId(Thread.currentThread().getName());
+    }
 }

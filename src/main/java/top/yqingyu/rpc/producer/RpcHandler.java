@@ -48,7 +48,7 @@ public class RpcHandler extends QyMsgServerHandler {
         QyMsg qyMsg = new QyMsg(MsgType.NORM_MSG, DataType.OBJECT);
         if (MsgType.AC.equals(msg.getMsgType())) {
             qyMsg.putMsg(Constants.invokeSuccess);
-            qyMsg.putMsgData(Constants.serviceIdentifierTag, new String(producer.serviceIdentifierTag, StandardCharsets.UTF_8));
+            qyMsg.putMsgData(Constants.serviceIdentifierTag, Producer.serviceIdentifierTag);
             return qyMsg;
         }
         if (MsgType.HEART_BEAT.equals(msg.getMsgType())) {
