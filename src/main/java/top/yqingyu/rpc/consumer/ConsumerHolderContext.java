@@ -94,6 +94,13 @@ public class ConsumerHolderContext {
         rpcLinkId.setLinkId(th, id);
     }
 
+    public void removeLinkId(String th){
+        rpcLinkId.removeLinkId(th);
+    }
+    public void removeLinkId(){
+        rpcLinkId.removeLinkId(Thread.currentThread().getName());
+    }
+
     public void setMethodExecuteInterceptor(MethodExecuteInterceptor methodExecuteInterceptor) {
         this.methodExecuteInterceptor = methodExecuteInterceptor;
     }
