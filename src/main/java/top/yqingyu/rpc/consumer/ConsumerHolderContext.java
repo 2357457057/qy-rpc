@@ -35,6 +35,7 @@ public class ConsumerHolderContext {
         Connection connection = consumer.getClient().getConnection();
         String name = consumer.getName();
         QyMsg qyMsg = new QyMsg(MsgType.AC, DataType.OBJECT);
+        qyMsg.setFrom(consumer.getId());
         QyMsg back = connection.get(qyMsg, Constants.authenticationWaitTime);
         String s = MsgHelper.gainMsgValue(back, Constants.serviceIdentifierTag);
         if (!CONSUMER_MAP.containsKey(name)) {
