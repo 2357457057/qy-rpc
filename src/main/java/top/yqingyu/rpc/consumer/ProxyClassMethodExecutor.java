@@ -7,7 +7,6 @@ import top.yqingyu.common.cglib.proxy.MethodInterceptor;
 import top.yqingyu.common.cglib.proxy.MethodProxy;
 import top.yqingyu.common.qydata.DataMap;
 import top.yqingyu.common.utils.StringUtil;
-import top.yqingyu.common.utils.UUIDUtil;
 import top.yqingyu.qymsg.*;
 import top.yqingyu.qymsg.netty.Connection;
 import top.yqingyu.rpc.Constants;
@@ -93,10 +92,8 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         }
 
         QyMsg qyMsg = new QyMsg(MsgType.NORM_MSG, DataType.OBJECT);
-        String s = UUIDUtil.randomUUID().toString2();
-        qyMsg.setFrom(s);
         qyMsg.putMsgData(Constants.parameterList, param);
-        qyMsg.putMsgData(Constants.linkId, s);
+        qyMsg.putMsgData(Constants.linkId, holder.ctx.rpcLinkId.getLinkId());
         if (retry) {
             return handleRetryMode(obj, method, param, retryTimes, retryDiff, qyMsg, methodStrName, wait, waitTime);
         }
@@ -113,8 +110,8 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
 
         qyMsg.putMsg(methodStrName);
         Object result = null;
-//        qyMsg.setFrom(consumer.getId());
-        logger.debug("invoke: {}  {}", qyMsg.getFrom(), methodStrName);
+        qyMsg.setFrom(consumer.getId());
+        logger.debug("invoke: {}", methodStrName);
         QyMsg back = get(wait, consumer, qyMsg, waitTime);
         remoteProcessError(back, methodStrName, e -> interceptor.error(ctx, method, param, e));
         String type = MsgHelper.gainMsg(back);
@@ -154,8 +151,8 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                 continue;
             }
             qyMsg.putMsg(methodStrName);
-//            qyMsg.setFrom(consumer.getId());
-            logger.debug("invoke: {}  {}", qyMsg.getFrom(), methodStrName);
+            qyMsg.setFrom(consumer.getId());
+            logger.debug("send invoke: {}", methodStrName);
             QyMsg back = get(wait, consumer, qyMsg, waitTime);
             remoteProcessError(back, methodStrName, e -> interceptor.error(ctx, method, param, e));
             String type = MsgHelper.gainMsg(back);
@@ -197,7 +194,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                 try {
                     Constructor<?> declaredConstructor = aClass.getDeclaredConstructor(String.class);
                     declaredConstructor.setAccessible(true);
-                    return (Throwable) declaredConstructor.newInstance(StringUtil.fillBrace("Anomaly simulation for remote server {},>>>{}: {}", holderName, errorClass, errorMessage));
+                    return (Throwable) declaredConstructor.newInstance(StringUtil.fillBrace("Anomaly simulation for remote server {},>>>{}: {}",holderName , errorClass, errorMessage));
                 } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
                          InvocationTargetException ignored) {
                     Constructor<?> declaredConstructor = aClass.getDeclaredConstructor();
@@ -240,7 +237,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         if (b) {
             qyMsg = connection.get(in, time);
             if (qyMsg == null) {
-                throw new RpcTimeOutException("rpc invoke time out time {} {}", in.getFrom(), time);
+                throw new RpcTimeOutException("rpc invoke time out time {}", time);
             }
             return qyMsg;
         }
