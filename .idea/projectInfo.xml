@@ -3,27 +3,36 @@
   <component name="com.aicode.state.project.ProjectInfoState">
     <option name="libraries">
       <list>
-        <option value="Maven: io.netty:netty-resolver:4.1.94.Final" />
-        <option value="Maven: top.yqingyu:commons-qy:1.9.7" />
-        <option value="Maven: com.squareup.okhttp3:okhttp:4.10.0" />
+        <option value="Maven: commons-io:commons-io:2.11.0" />
+        <option value="Maven: commons-net:commons-net:3.9.0" />
         <option value="Maven: com.squareup.okio:okio-jvm:3.0.0" />
-        <option value="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22" />
-        <option value="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22" />
+        <option value="Maven: commons-codec:commons-codec:1.15" />
+        <option value="Maven: com.jcraft:jsch:0.1.55" />
+        <option value="Maven: com.squareup.okhttp3:okhttp:4.10.0" />
+        <option value="Maven: com.fasterxml.jackson.core:jackson-core:2.15.2" />
+        <option value="Maven: com.fasterxml.jackson.core:jackson-databind:2.15.2" />
         <option value="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22" />
-        <option value="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.8.22" />
-        <option value="Maven: top.yqingyu:QyMsg:1.9.7" />
-        <option value="Maven: org.slf4j:slf4j-api:2.0.7" />
-        <option value="Maven: org.yaml:snakeyaml:2.0" />
-        <option value="Maven: com.alibaba.fastjson2:fastjson2-extension:2.0.34" />
-        <option value="Maven: io.netty:netty-codec:4.1.94.Final" />
-        <option value="Maven: io.netty:netty-common:4.1.94.Final" />
-        <option value="Maven: io.netty:netty-buffer:4.1.94.Final" />
+        <option value="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22" />
         <option value="Maven: io.netty:netty-transport:4.1.94.Final" />
-        <option value="Maven: org.jetbrains:annotations:13.0" />
+        <option value="Maven: org.apache.commons:commons-lang3:3.12.0" />
+        <option value="Maven: io.netty:netty-common:4.1.94.Final" />
+        <option value="Maven: io.netty:netty-resolver:4.1.94.Final" />
+        <option value="Maven: io.netty:netty-buffer:4.1.94.Final" />
+        <option value="Maven: io.netty:netty-codec:4.1.94.Final" />
+        <option value="Maven: com.auth0:java-jwt:4.3.0" />
+        <option value="Maven: com.fasterxml.jackson.core:jackson-annotations:2.15.2" />
+        <option value="Maven: com.alibaba.fastjson2:fastjson2-extension:2.0.34" />
         <option value="Maven: com.alibaba.fastjson2:fastjson2:2.0.34" />
         <option value="Maven: ch.qos.logback:logback-classic:1.4.8" />
         <option value="Maven: ch.qos.logback:logback-core:1.4.8" />
+        <option value="Maven: top.yqingyu:QyMsg:1.9.7" />
         <option value="Maven: org.projectlombok:lombok:1.18.30" />
+        <option value="Maven: org.slf4j:slf4j-api:2.0.7" />
+        <option value="Maven: org.yaml:snakeyaml:2.0" />
+        <option value="Maven: org.jetbrains:annotations:13.0" />
+        <option value="Maven: top.yqingyu:commons-qy:1.9.7" />
+        <option value="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22" />
+        <option value="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.8.22" />
       </list>
     </option>
     <option name="projectName" value="QyRpc" />

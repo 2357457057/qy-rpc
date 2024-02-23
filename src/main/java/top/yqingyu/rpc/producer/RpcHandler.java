@@ -55,7 +55,7 @@ public class RpcHandler extends QyMsgServerHandler {
             return null;
         }
         String s = MsgHelper.gainMsg(msg);
-        logger.debug("invoke from:{} data:{}", msg.getFrom(), s);
+        logger.debug("invoke from:{} {}", msg.getFrom(), s);
         Bean bean = ROUTING_TABLE.get(s);
         if (bean == null) {
             qyMsg.putMsg(Constants.invokeNoSuch);
