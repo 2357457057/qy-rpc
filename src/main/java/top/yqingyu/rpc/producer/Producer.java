@@ -25,6 +25,7 @@ public class Producer {
     volatile MsgServer msgServer;
     final String serverName;
     final ServerExceptionHandler exceptionHandler;
+    final QyRpcInterceptorChain interceptorChain;
     private final int pool;
     private final int port;
     private final int radix;
@@ -35,6 +36,7 @@ public class Producer {
     private Producer(Builder builder) {
         serverName = builder.serverName;
         exceptionHandler = builder.exceptionHandler;
+        interceptorChain = builder.interceptorChain;
         pool = builder.pool;
         radix = builder.radix;
         clearTime = builder.clearTime;
@@ -130,6 +132,7 @@ public class Producer {
             Bean bean = new Bean();
             bean.method = method;
             bean.object = invoke;
+            bean.chain = interceptorChain;
             String string = sb.toString();
             ROUTING_TABLE.put(string, bean);
             serviceIdentifier(string);
@@ -151,6 +154,7 @@ public class Producer {
     }
 
     public static final class Builder {
+        public QyRpcInterceptorChain interceptorChain = new QyRpcInterceptorChain();
         String serverName = "QyRpcProducer";
         ServerExceptionHandler exceptionHandler = new ServerExceptionHandler() {
         };
@@ -175,6 +179,11 @@ public class Producer {
 
         public Builder exceptionHandler(ServerExceptionHandler val) {
             exceptionHandler = val;
+            return this;
+        }
+
+        public Builder interceptorChain(QyRpcInterceptorChain val) {
+            interceptorChain = val;
             return this;
         }
 

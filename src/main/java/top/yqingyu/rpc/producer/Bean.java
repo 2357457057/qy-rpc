@@ -1,12 +1,16 @@
 package top.yqingyu.rpc.producer;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class Bean {
+class Bean {
     Object object;
     Method method;
+    QyRpcInterceptorChain chain;
 
     public Object invoke(Object... objs) throws Exception {
-        return method.invoke(object, objs);
+        AtomicReference<Object> rtn = new AtomicReference<>(null);
+        chain.doChain(() -> rtn.set(method.invoke(object, objs)));
+        return rtn.get();
     }
 }
