@@ -54,16 +54,22 @@ public class RpcHandler extends QyMsgServerHandler {
         if (MsgType.HEART_BEAT.equals(msg.getMsgType())) {
             return null;
         }
+        ProducerCtx producerCtx = new ProducerCtx();
         String s = MsgHelper.gainMsg(msg);
-        logger.debug("invoke from:{} data:{}", msg.getFrom(), s);
-        Bean bean = ROUTING_TABLE.get(s);
-        if (bean == null) {
-            qyMsg.putMsg(Constants.invokeNoSuch);
-            return qyMsg;
-        }
+        String from = msg.getFrom();
         try {
+            producerCtx.from = from;
+            if (logger.isDebugEnabled())
+                logger.debug("invoke from:{} data:{}", from, s);
+            Bean bean = ROUTING_TABLE.get(s);
+            producerCtx.bean = bean;
+            if (bean == null) {
+                qyMsg.putMsg(Constants.invokeNoSuch);
+                return qyMsg;
+            }
             DataMap dataMap = msg.getDataMap();
             Object[] o = (Object[]) dataMap.get(Constants.parameterList);
+            producerCtx.args = o;
             Object invoke = bean.invoke(o);
             qyMsg.putMsg(Constants.invokeSuccess);
             qyMsg.putMsgData(Constants.invokeResult, invoke);
@@ -79,8 +85,11 @@ public class RpcHandler extends QyMsgServerHandler {
             qyMsg.putMsgData(Constants.invokeErrorClass, name);
             qyMsg.putMsgData(Constants.invokeErrorMessage, StringUtil.isEmpty(message) ? "" : message);
             serverExceptionHandler.exceptionCallBack(ctx.channel().remoteAddress(), msg, e);
+        } finally {
+            if (logger.isDebugEnabled())
+                logger.debug("invoked from:{} {}", from, s);
+            ProducerCtx.remove();
         }
-        logger.debug("invoked from:{} {}", msg.getFrom(), s);
         return qyMsg;
     }
 

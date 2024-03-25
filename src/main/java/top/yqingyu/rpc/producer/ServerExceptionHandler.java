@@ -12,6 +12,7 @@ public interface ServerExceptionHandler {
 
     default void exceptionCallBack(SocketAddress socketAddress, QyMsg msg, Throwable t) {
         InetSocketAddress address = (InetSocketAddress) socketAddress;
-        logger.error("QyRpcProducer invoke error from ip:{} consumer:{}", address.getAddress().getHostAddress(), msg.getFrom(), t);
+        if (logger.isErrorEnabled())
+            logger.error("QyRpcProducer invoke error from ip:{} consumer:{}", address.getAddress().getHostAddress(), msg.getFrom(), t);
     }
 }

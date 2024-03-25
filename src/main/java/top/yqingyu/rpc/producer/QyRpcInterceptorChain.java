@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class QyRpcInterceptorChain {
     private final ThreadLocal<AtomicInteger> ID = ThreadLocal.withInitial(AtomicInteger::new);
     final ThreadLocal<Boolean> IN = ThreadLocal.withInitial(() -> true);
-    final ThreadLocal<InterceptorCallBack> CALL_BACK = new ThreadLocal<>();
     private final List<QyRpcInterceptor> rpcInterceptorList = new ArrayList<>();
 
 
@@ -38,19 +37,17 @@ public class QyRpcInterceptorChain {
     }
 
 
-    void doChain(InterceptorCallBack interceptorCallBack) {
+    void doChain() {
         if (rpcInterceptorList.isEmpty()) return;
-        CALL_BACK.set(interceptorCallBack);
         try {
             rpcInterceptorList.get(0).pre();
         } finally {
             ID.get().set(0);
             IN.set(true);
-            CALL_BACK.remove();
         }
     }
 
-    QyRpcInterceptor next(InterceptorCallBack interceptorCallBack) throws InvocationTargetException, IllegalAccessException {
+    QyRpcInterceptor next(ProducerCtx producerCtx) throws InvocationTargetException, IllegalAccessException {
         AtomicInteger id = ID.get();
 
         int i = id.incrementAndGet();
@@ -63,7 +60,8 @@ public class QyRpcInterceptorChain {
             return rpcInterceptorList.get(i);
         }
 
-        if (interceptorCallBack != null) interceptorCallBack.call();
+        if (producerCtx != null) producerCtx.rtn = producerCtx.bean.invoke0();
+
         id.getAndDecrement();
 
         int andDecrement = id.getAndDecrement();
@@ -76,7 +74,7 @@ public class QyRpcInterceptorChain {
         public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
             if ("pre".equals(method.getName())) {
                 method.invoke(_this, args);
-                QyRpcInterceptor interceptor = chain.next(chain.CALL_BACK.get());
+                QyRpcInterceptor interceptor = chain.next(ProducerCtx.getCtx());
                 if (interceptor == null) return null;
                 if (chain.IN.get()) {
                     interceptor.pre();
