@@ -68,11 +68,10 @@ public class RpcHandler extends QyMsgServerHandler {
                 return qyMsg;
             }
             DataMap dataMap = msg.getDataMap();
-            Object[] o = (Object[]) dataMap.get(Constants.parameterList);
-            producerCtx.args = o;
-            Object invoke = bean.invoke(o);
+            producerCtx.args = (Object[]) dataMap.get(Constants.parameterList);
+            bean.invoke();
             qyMsg.putMsg(Constants.invokeSuccess);
-            qyMsg.putMsgData(Constants.invokeResult, invoke);
+            qyMsg.putMsgData(Constants.invokeResult, producerCtx.rtn);
         } catch (Throwable e) {
             Throwable cause = e.getCause();
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
