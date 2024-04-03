@@ -37,8 +37,11 @@ public class QyRpcInterceptorChain {
     }
 
 
-    void doChain() {
-        if (rpcInterceptorList.isEmpty()) return;
+    void doChain() throws InvocationTargetException, IllegalAccessException {
+        if (rpcInterceptorList.isEmpty()) {
+            ProducerCtx.getCtx().bean.invoke0();
+            return;
+        }
         try {
             rpcInterceptorList.get(0).pre();
         } finally {
