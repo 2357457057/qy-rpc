@@ -59,8 +59,7 @@ public class RpcHandler extends QyMsgServerHandler {
         String from = msg.getFrom();
         try {
             producerCtx.from = from;
-            if (logger.isDebugEnabled())
-                logger.debug("invoke from:{} data:{}", from, s);
+            logger.debug("invoke from:{} data:{}", from, s);
             Bean bean = ROUTING_TABLE.get(s);
             producerCtx.bean = bean;
             if (bean == null) {
@@ -85,8 +84,7 @@ public class RpcHandler extends QyMsgServerHandler {
             qyMsg.putMsgData(Constants.invokeErrorMessage, StringUtil.isEmpty(message) ? "" : message);
             serverExceptionHandler.exceptionCallBack(ctx.channel().remoteAddress(), msg, e);
         } finally {
-            if (logger.isDebugEnabled())
-                logger.debug("invoked from:{} {}", from, s);
+            logger.debug("invoked from:{} {}", from, s);
             ProducerCtx.remove();
         }
         return qyMsg;
