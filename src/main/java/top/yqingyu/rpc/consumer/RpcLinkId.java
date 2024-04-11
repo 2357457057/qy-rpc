@@ -6,7 +6,7 @@ class RpcLinkId {
     ConcurrentHashMap<String, String> RPC_LINK_ID_MAP = new ConcurrentHashMap<>();
     ThreadLocal<String> RPC_LINK_ID_THREAD_LOCAL = ThreadLocal.withInitial(() -> {
         String name = "RemoteTh-" + Thread.currentThread().getName();
-        return name.substring(0, 32);
+        return name.length() > 32 ? name.substring(0, 32): name;
     });
 
     void setLinkId(String id) {
