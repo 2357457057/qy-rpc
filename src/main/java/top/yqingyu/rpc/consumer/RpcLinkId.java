@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 class RpcLinkId {
     ConcurrentHashMap<String, String> RPC_LINK_ID_MAP = new ConcurrentHashMap<>();
     ThreadLocal<String> RPC_LINK_ID_THREAD_LOCAL = ThreadLocal.withInitial(() -> {
-        String name = "Th-" + Thread.currentThread().getName();
+        String name = "RemoteTh-" + Thread.currentThread().getName();
         return name.substring(0, 32);
     });
 
