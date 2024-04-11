@@ -55,7 +55,6 @@ public class ConsumerHolderContext {
         return consumerHolder;
     }
 
-    @SuppressWarnings("unchecked")
     public <T> T getProxy(String consumerName, Class<T> clazz) {
         if (ProxyClassCache.containsKey(clazz)) {
             return (T) ProxyClassCache.get(clazz);
