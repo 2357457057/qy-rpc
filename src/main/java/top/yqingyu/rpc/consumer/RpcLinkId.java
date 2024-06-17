@@ -4,10 +4,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class RpcLinkId {
     ConcurrentHashMap<String, String> RPC_LINK_ID_MAP = new ConcurrentHashMap<>();
-    ThreadLocal<String> RPC_LINK_ID_THREAD_LOCAL = ThreadLocal.withInitial(() -> {
-        String name = "RemoteTh-" + Thread.currentThread().getName();
-        return name.length() > 32 ? name.substring(0, 32): name;
-    });
 
     void setLinkId(String id) {
         RPC_LINK_ID_MAP.put(Thread.currentThread().getName(), id);
@@ -22,8 +18,7 @@ class RpcLinkId {
     }
 
     String getLinkId(String th) {
-        String s = RPC_LINK_ID_MAP.get(th);
-        return s == null ? RPC_LINK_ID_THREAD_LOCAL.get() : s;
+        return RPC_LINK_ID_MAP.get(th);
     }
 
     void removeLinkId(String th) {
