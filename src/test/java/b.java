@@ -1,24 +1,33 @@
 import lombok.extern.slf4j.Slf4j;
-import top.yqingyu.qymsg.netty.ConnectionConfig;
+import top.yqingyu.InterfaceA;
+import top.yqingyu.common.utils.LocalDateTimeUtil;
 import top.yqingyu.qyws.modules.web.service.ViewNumService;
 import top.yqingyu.rpc.consumer.Consumer;
 import top.yqingyu.rpc.consumer.ConsumerHolderContext;
+import top.yqingyu.rpc.consumer.conf.ConsumerConfig;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 public class b {
 
     public static void main(String[] args) throws Throwable {
         ConsumerHolderContext consumerHolderContext = new ConsumerHolderContext();
-        ConnectionConfig build = new ConnectionConfig.Builder()
-                .host("192.168.50.68")
-                .poolMin(10)
-                .poolMax(10)
-                .port(4737)
-                .build();
-        Consumer consumer = Consumer.create(build, consumerHolderContext);
-//        A proxy = consumerHolderContext.getProxy(consumer.getName(), A.class);
-//        proxy.bbbb("轻语");
-        remoteHandle(consumerHolderContext, consumer);
+        ConsumerConfig config = new ConsumerConfig();
+        config.setHost("127.0.0.1");
+        config.setPoolMin(10);
+        config.setPoolMax(10);
+        config.setPort(4737);
+        Consumer.create(config, consumerHolderContext);
+        InterfaceA proxy = consumerHolderContext.getProxy(config.getName(), InterfaceA.class);
+        LocalDateTime now = LocalDateTime.now();
+        for (int i = 0; i < 10000; i++) {
+            proxy.aaaa("轻语", "yyj");
+        }
+        System.out.println(LocalDateTimeUtil.between(now, LocalDateTime.now()));
+        System.out.println(proxy.aaaa("轻语", "yyj"));
+        System.out.println(proxy.aaaa("轻语", "yyj"));
+        proxy.bbbb("轻语");
     }
 
     public static void remoteHandle(ConsumerHolderContext consumerHolderContext, Consumer consumer) {

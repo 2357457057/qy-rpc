@@ -1,14 +1,10 @@
 package top.yqingyu.rpc.consumer;
 
 
-import top.yqingyu.common.cglib.core.DuplicatesPredicate;
-
-
 import top.yqingyu.rpc.exception.IllegalRpcArgumentException;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConsumerHolder {
@@ -30,11 +26,9 @@ public class ConsumerHolder {
 
     void add(Consumer c, String tag) {
         if (!serverTag.equals(tag))
-            throw new IllegalRpcArgumentException("序:{} 名:{} 服务配置的服务是不同的，请检查", consumerList.size() + 1, c.name);
+            throw new IllegalRpcArgumentException("序:{} 名:{} 服务配置的服务是不同的，请检查", consumerList.size() + 1, c.getName());
         consumerList.add(c);
     }
-
-
 
 
 }

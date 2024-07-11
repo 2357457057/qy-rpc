@@ -1,27 +1,26 @@
 package top.yqingyu.rpc.consumer;
 
 
-import top.yqingyu.common.utils.UUIDUtil;
-import top.yqingyu.qymsg.netty.ConnectionConfig;
 import top.yqingyu.qymsg.netty.MsgClient;
+import top.yqingyu.rpc.consumer.conf.ConsumerConfig;
 
 
 public class Consumer {
     MsgClient client;
 
-    String name;
+    ConsumerConfig config;
+
     /**
      * 必须为长度32的字串。
      */
-    String id = UUIDUtil.randomUUID().toString2();
 
-    Consumer() {
+    Consumer(ConsumerConfig config) {
+        this.config = config;
+        this.client = MsgClient.create(config.getConnectionConfig());
     }
 
-    public static Consumer create(ConnectionConfig config, ConsumerHolderContext consumerHolderContext) throws Exception {
-        Consumer consumer = new Consumer();
-        consumer.client = MsgClient.create(config);
-        consumer.name = config.getName();
+    public static Consumer create(ConsumerConfig config, ConsumerHolderContext consumerHolderContext) throws Exception {
+        Consumer consumer = new Consumer(config);
         consumerHolderContext.addConsumer(consumer);
         return consumer;
     }
@@ -35,18 +34,18 @@ public class Consumer {
     }
 
     public String getName() {
-        return name;
+        return config.name;
     }
 
     public void setName(String name) {
-        this.name = name;
+        config.name = name;
     }
 
     public String getId() {
-        return id;
+        return config.id;
     }
 
     public void setId(String id) {
-        this.id = id;
+        config.id = id;
     }
 }

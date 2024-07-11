@@ -3,8 +3,6 @@ package top.yqingyu.rpc.consumer;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import top.yqingyu.common.cglib.proxy.MethodInterceptor;
-import top.yqingyu.common.cglib.proxy.MethodProxy;
 import top.yqingyu.common.qydata.DataMap;
 import top.yqingyu.common.utils.StringUtil;
 import top.yqingyu.qymsg.*;
@@ -14,81 +12,54 @@ import top.yqingyu.rpc.annontation.QyRpcProducerProperties;
 import top.yqingyu.rpc.exception.RemoteServerException;
 import top.yqingyu.rpc.exception.RpcException;
 import top.yqingyu.rpc.exception.RpcTimeOutException;
-import top.yqingyu.rpc.util.RpcUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.concurrent.ConcurrentHashMap;
 
-public class ProxyClassMethodExecutor implements MethodInterceptor {
-
-    public static final Logger logger = LoggerFactory.getLogger(ProxyClassMethodExecutor.class);
-    Class<?> proxyClass;
-    String holderName;
+public abstract class MethodExecProxy {
+    protected final Logger logger = LoggerFactory.getLogger(MethodExecProxy.class);
     ConsumerHolder holder;
-    ConsumerHolderContext ctx;
-    MethodExecuteInterceptor interceptor;
-    ConcurrentHashMap<Method, QyRpcProducerProperties> methodPropertiesCache = new ConcurrentHashMap<>();
-    ConcurrentHashMap<Method, Boolean> emptyMethodPropertiesCache = new ConcurrentHashMap<>();
-    ConcurrentHashMap<Method, String> methodNameCache = new ConcurrentHashMap<>();
-    ConcurrentHashMap<Method, Object> specialMethodNameCache = new ConcurrentHashMap<>();
     final static Boolean b = false;
+    protected final ProxyMetaDataCache cache;
+    protected final Class<?> proxyClass;
+    protected final ConsumerHolderContext ctx;
+    protected final String holderName;
+    protected final MethodExecuteInterceptor interceptor;
 
-    public ProxyClassMethodExecutor(Class<?> proxyClass, String consumerName, ConsumerHolderContext ctx) {
+    public MethodExecProxy(Class<?> proxyClass, String consumerName, ConsumerHolderContext ctx) {
         this.proxyClass = proxyClass;
         this.ctx = ctx;
-        holderName = consumerName;
-        interceptor = ctx.methodExecuteInterceptor;
+        this.holderName = consumerName;
+        this.interceptor = ctx.methodExecuteInterceptor;
+        cache = new ProxyMetaDataCache(proxyClass);
     }
-
-    @Override
-    public Object intercept(Object obj, Method method, Object[] param, MethodProxy proxy) throws Throwable {
+    public Object invoke0(Object obj, Method method, Object[] param) throws Throwable {
         if (holder == null) {
             holder = ctx.getConsumerHolder(holderName);
             if (holder == null) throw new RpcException("No consumer named {} was initialized please check", holderName);
         }
         interceptor.before(ctx, method, param);
-        Object result = specialMethodNameCache.get(method);
+        Object result = cache.getSpecialMethodName(method);
         if (result != null) {
             interceptor.completely(ctx, method, param, result);
             return result;
         }
-        String methodStrName = methodNameCache.get(method);
-        if (StringUtil.isEmpty(methodStrName)) {
-            String className = RpcUtil.getClassName(proxyClass);
-            String name = method.getName();
-
-            StringBuilder sb = new StringBuilder(className).append(Constants.method).append(name);
-            if (param != null) for (Class<?> o : method.getParameterTypes()) {
-                sb.append("#").append(o.getName());
-            }
-            methodStrName = sb.toString();
-            methodNameCache.put(method, methodStrName);
-        }
+        String methodStrName = cache.getMethodName(method, param);
 
         boolean retry = false;
         boolean wait = false;
         boolean retryDiff = false;
         int retryTimes = 0;
         long waitTime = 0;
-        if (!emptyMethodPropertiesCache.containsKey(method)) {
-            QyRpcProducerProperties annotation = methodPropertiesCache.get(method);
-            if (annotation == null) {
-                annotation = method.getAnnotation(QyRpcProducerProperties.class);
-            }
-            if (annotation == null) {
-                annotation = proxyClass.getAnnotation(QyRpcProducerProperties.class);
-            }
-            if (annotation != null) {
-                retryTimes = annotation.retryTimes();
-                waitTime = annotation.waitTime();
-                retry = check(retryTimes);
-                wait = check(waitTime);
-                retryDiff = annotation.retryDiffProducer();
-            } else {
-                emptyMethodPropertiesCache.put(method, b);
-            }
+
+        QyRpcProducerProperties annotation = cache.getMethodProperties(method);
+        if (annotation != null) {
+            retryTimes = annotation.retryTimes();
+            waitTime = annotation.waitTime();
+            retry = check(retryTimes);
+            wait = check(waitTime);
+            retryDiff = annotation.retryDiffProducer();
         }
 
         QyMsg qyMsg = new QyMsg(MsgType.NORM_MSG, DataType.OBJECT);
@@ -100,6 +71,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         }
         return handleOnceMode(obj, method, param, qyMsg, methodStrName, wait, waitTime);
     }
+
 
     @Nullable
     private Object handleOnceMode(Object obj, Method method, Object[] param, QyMsg qyMsg, String methodStrName, boolean wait, long waitTime) throws Throwable {
@@ -195,7 +167,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
                 try {
                     Constructor<?> declaredConstructor = aClass.getDeclaredConstructor(String.class);
                     declaredConstructor.setAccessible(true);
-                    return (Throwable) declaredConstructor.newInstance(StringUtil.fillBrace("Anomaly simulation for remote server {},>>>{}: {}",holderName , errorClass, errorMessage));
+                    return (Throwable) declaredConstructor.newInstance(StringUtil.fillBrace("Anomaly simulation for remote server {},>>>{}: {}", holderName, errorClass, errorMessage));
                 } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
                          InvocationTargetException ignored) {
                     Constructor<?> declaredConstructor = aClass.getDeclaredConstructor();
@@ -221,10 +193,7 @@ public class ProxyClassMethodExecutor implements MethodInterceptor {
         if ("hashcode".equals(methodName)) {
             trn = proxyHashCode();
         }
-        if ("equals".equals(methodName)) {
-            trn = proxyEquals(obj, param);
-        }
-        if (trn != null) specialMethodNameCache.put(method, trn);
+        cache.putSpecialMethodNameCache(method, trn);
         return trn;
     }
 
