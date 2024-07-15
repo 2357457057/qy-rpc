@@ -49,6 +49,7 @@ public class RpcHandler extends QyMsgServerHandler {
         if (MsgType.AC.equals(msg.getMsgType())) {
             qyMsg.putMsg(Constants.invokeSuccess);
             qyMsg.putMsgData(Constants.serviceIdentifierTag, Producer.serviceIdentifierTag);
+            logger.info("client connected from :{}", qyMsg.getFrom());
             return qyMsg;
         }
         if (MsgType.HEART_BEAT.equals(msg.getMsgType())) {
