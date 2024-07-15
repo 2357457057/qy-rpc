@@ -51,6 +51,7 @@ public class ConsumerHolderContext {
         QyMsg qyMsg = new QyMsg(MsgType.AC, DataType.OBJECT);
         qyMsg.setFrom(consumer.getId());
         QyMsg back = connection.get(qyMsg, Constants.authenticationWaitTime);
+        logger.info("qyrpc consumer {} authentication success", name);
         String s = MsgHelper.gainMsgValue(back, Constants.serviceIdentifierTag);
         if (!CONSUMER_MAP.containsKey(name)) {
             ConsumerHolder holder = new ConsumerHolder(s, this);
