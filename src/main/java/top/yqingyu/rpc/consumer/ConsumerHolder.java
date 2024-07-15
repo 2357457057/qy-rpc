@@ -29,8 +29,7 @@ public class ConsumerHolder {
 
     void add(Consumer c, String tag) {
         if (!serverTag.equals(tag))
-            throw new IllegalRpcArgumentException("序:{} 名:{} 服务配置的服务是不同的，请检查", consumerList.size() + 1, c.getName());
-        logger.info("创建Rpc链接：{} ,校验码 {}", c.getName(), tag);
+            throw new IllegalRpcArgumentException("seq:{} name:{} auth fail ,not same service, plz check", consumerList.size() + 1, c.getName());
         consumerList.add(c);
     }
 

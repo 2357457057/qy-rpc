@@ -1,6 +1,5 @@
 package top.yqingyu.rpc.consumer;
 
-import com.alibaba.fastjson2.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.yqingyu.common.cglib.core.ClassLoaderAwareGeneratorStrategy;
@@ -51,22 +50,22 @@ public class ConsumerHolderContext {
         QyMsg qyMsg = new QyMsg(MsgType.AC, DataType.OBJECT);
         qyMsg.setFrom(consumer.getId());
         QyMsg back = connection.get(qyMsg, Constants.authenticationWaitTime);
-        logger.info("qyrpc consumer {} authentication success", name);
-        String s = MsgHelper.gainMsgValue(back, Constants.serviceIdentifierTag);
+        String tag = MsgHelper.gainMsgValue(back, Constants.serviceIdentifierTag);
+        logger.info("created rpc connection：{} ,server tag {}", name, tag);
         if (!CONSUMER_MAP.containsKey(name)) {
-            ConsumerHolder holder = new ConsumerHolder(s, this);
-            holder.add(consumer, s);
+            ConsumerHolder holder = new ConsumerHolder(tag, this);
+            holder.add(consumer, tag);
             CONSUMER_MAP.put(name, holder);
             return;
         }
         ConsumerHolder holder = CONSUMER_MAP.get(name);
-        holder.add(consumer, s);
+        holder.add(consumer, tag);
     }
 
     public ConsumerHolder getConsumerHolder(String consumerName) {
         ConsumerHolder consumerHolder = CONSUMER_MAP.get(consumerName);
         if (consumerHolder == null)
-            throw new NoSuchHolderException("未配置名为{}的holder 已配置的{}", consumerName, JSON.toJSONString(CONSUMER_MAP));
+            throw new NoSuchHolderException("can not find holder name is: {}", consumerName);
         return consumerHolder;
     }
 
