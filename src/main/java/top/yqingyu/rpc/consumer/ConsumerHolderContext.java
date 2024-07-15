@@ -1,5 +1,6 @@
 package top.yqingyu.rpc.consumer;
 
+import com.alibaba.fastjson2.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.yqingyu.common.cglib.core.ClassLoaderAwareGeneratorStrategy;
@@ -64,7 +65,7 @@ public class ConsumerHolderContext {
     public ConsumerHolder getConsumerHolder(String consumerName) {
         ConsumerHolder consumerHolder = CONSUMER_MAP.get(consumerName);
         if (consumerHolder == null)
-            throw new NoSuchHolderException("未配置名为{}的holder", consumerName);
+            throw new NoSuchHolderException("未配置名为{}的holder 已配置的{}", consumerName, JSON.toJSONString(CONSUMER_MAP));
         return consumerHolder;
     }
 

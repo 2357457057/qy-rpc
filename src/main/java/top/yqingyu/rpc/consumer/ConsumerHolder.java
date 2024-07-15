@@ -1,6 +1,8 @@
 package top.yqingyu.rpc.consumer;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import top.yqingyu.rpc.exception.IllegalRpcArgumentException;
 
 import java.util.ArrayList;
@@ -8,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConsumerHolder {
+    final static Logger logger = LoggerFactory.getLogger(ConsumerHolder.class);
     final List<Consumer> consumerList = new ArrayList<>();
     final AtomicInteger i = new AtomicInteger();
     final String serverTag;
