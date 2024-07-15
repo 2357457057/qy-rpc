@@ -27,71 +27,7 @@
         </filter>
     </appender>
 
-    <appender name="infoAppender" class="RollingFileAppender">
-        <file>${log.filePath}/info/info.log</file>
-        <rollingPolicy class="TimeBasedRollingPolicy">
-            <fileNamePattern>${log.filePath}/info/info.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-        </rollingPolicy>
-        <encoder class="PatternLayoutEncoder">
-            <pattern>${log.pattern}</pattern>
-        </encoder>
-        <filter class="LevelFilter">
-            <level>INFO</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
-    <appender name="debugAppender" class="RollingFileAppender">
-        <file>${log.filePath}/debug/debug.log</file>
-        <rollingPolicy class="TimeBasedRollingPolicy">
-            <fileNamePattern>${log.filePath}/debug/debug.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-        </rollingPolicy>
-        <encoder class="PatternLayoutEncoder">
-            <pattern>${log.pattern}</pattern>
-        </encoder>
-        <filter class="LevelFilter">
-            <level>DEBUG</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
-    <appender name="errorAppender" class="RollingFileAppender">
-        <file>${log.filePath}/error/error.log</file>
-        <rollingPolicy class="TimeBasedRollingPolicy">
-            <fileNamePattern>${log.filePath}/error/error.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-        </rollingPolicy>
-        <encoder class="PatternLayoutEncoder">
-            <pattern>${log.pattern}</pattern>
-        </encoder>
-        <filter class="LevelFilter">
-            <level>ERROR</level>
-            <onMatch>ACCEPT</onMatch>
-            <onMismatch>DENY</onMismatch>
-        </filter>
-    </appender>
-
-    <appender name="async-info" class="AsyncAppender">
-        <appender-ref ref="infoAppender"/>
-    </appender>
-
-    <appender name="async-debug" class="AsyncAppender">
-        <appender-ref ref="debugAppender"/>
-    </appender>
-
-    <appender name="async-error" class="AsyncAppender">
-        <appender-ref ref="errorAppender"/>
-    </appender>
-
-    <appender name="async-cons" class="AsyncAppender">
-        <appender-ref ref="consoleAppender"/>
-    </appender>
-
     <root>
         <appender-ref ref="consoleAppender"/>
-        <appender-ref ref="async-debug"/>
-        <appender-ref ref="async-info"/>
-        <appender-ref ref="async-error"/>
     </root>
 </configuration>

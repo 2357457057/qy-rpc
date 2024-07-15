@@ -5,6 +5,7 @@ import top.yqingyu.qyws.modules.web.service.ViewNumService;
 import top.yqingyu.rpc.consumer.Consumer;
 import top.yqingyu.rpc.consumer.ConsumerHolderContext;
 import top.yqingyu.rpc.consumer.conf.ConsumerConfig;
+import top.yqingyu.rpc.consumer.conf.ProxyMode;
 
 import java.time.LocalDateTime;
 
@@ -18,16 +19,16 @@ public class b {
         config.setPoolMin(10);
         config.setPoolMax(10);
         config.setPort(4737);
+        config.setProxyMode(ProxyMode.JDK);
         Consumer.create(config, consumerHolderContext);
         InterfaceA proxy = consumerHolderContext.getProxy(config.getName(), InterfaceA.class);
         LocalDateTime now = LocalDateTime.now();
-        for (int i = 0; i < 10000; i++) {
-            proxy.aaaa("轻语", "yyj");
+        for (int i = 0; i < 50000; i++) {
+            proxy.aaaa("轻语");
         }
         System.out.println(LocalDateTimeUtil.between(now, LocalDateTime.now()));
-        System.out.println(proxy.aaaa("轻语", "yyj"));
-        System.out.println(proxy.aaaa("轻语", "yyj"));
-        proxy.bbbb("轻语");
+        proxy.shutdown();
+        consumerHolderContext.shutdown();
     }
 
     public static void remoteHandle(ConsumerHolderContext consumerHolderContext, Consumer consumer) {

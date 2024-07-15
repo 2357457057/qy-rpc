@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.yqingyu.common.qydata.DataMap;
 import top.yqingyu.common.utils.StringUtil;
-import top.yqingyu.qymsg.DataType;
 import top.yqingyu.qymsg.MsgHelper;
 import top.yqingyu.qymsg.MsgType;
 import top.yqingyu.qymsg.QyMsg;
@@ -45,12 +44,12 @@ public class RpcHandler extends QyMsgServerHandler {
     }
 
     QyMsg deal(ChannelHandlerContext ctx, QyMsg msg) {
-        QyMsg qyMsg = new QyMsg(MsgType.NORM_MSG, DataType.OBJECT);
+        QyMsg rtnMsg = new QyMsg(MsgType.NORM_MSG, msg.getDataType());
         if (MsgType.AC.equals(msg.getMsgType())) {
-            qyMsg.putMsg(Constants.invokeSuccess);
-            qyMsg.putMsgData(Constants.serviceIdentifierTag, Producer.serviceIdentifierTag);
-            logger.info("client connected from :{}", qyMsg.getFrom());
-            return qyMsg;
+            rtnMsg.putMsg(Constants.invokeSuccess);
+            rtnMsg.putMsgData(Constants.serviceIdentifierTag, Producer.serviceIdentifierTag);
+            logger.info("client connected from :{}", msg.getFrom());
+            return rtnMsg;
         }
         if (MsgType.HEART_BEAT.equals(msg.getMsgType())) {
             return null;
@@ -64,14 +63,14 @@ public class RpcHandler extends QyMsgServerHandler {
             Bean bean = ROUTING_TABLE.get(s);
             producerCtx.bean = bean;
             if (bean == null) {
-                qyMsg.putMsg(Constants.invokeNoSuch);
-                return qyMsg;
+                rtnMsg.putMsg(Constants.invokeNoSuch);
+                return rtnMsg;
             }
             DataMap dataMap = msg.getDataMap();
             producerCtx.args = (Object[]) dataMap.get(Constants.parameterList);
             bean.invoke();
-            qyMsg.putMsg(Constants.invokeSuccess);
-            qyMsg.putMsgData(Constants.invokeResult, producerCtx.rtn);
+            rtnMsg.putMsg(Constants.invokeSuccess);
+            rtnMsg.putMsgData(Constants.invokeResult, producerCtx.rtn);
         } catch (Throwable e) {
             Throwable cause = e.getCause();
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -79,16 +78,16 @@ public class RpcHandler extends QyMsgServerHandler {
             String name = cause.getClass().getName();
             String message = cause.getMessage();
 
-            qyMsg.putMsg(Constants.invokeThrowError);
-            qyMsg.putMsgData(Constants.invokeResult, outputStream.toString(StandardCharsets.UTF_8));
-            qyMsg.putMsgData(Constants.invokeErrorClass, name);
-            qyMsg.putMsgData(Constants.invokeErrorMessage, StringUtil.isEmpty(message) ? "" : message);
+            rtnMsg.putMsg(Constants.invokeThrowError);
+            rtnMsg.putMsgData(Constants.invokeResult, outputStream.toString(StandardCharsets.UTF_8));
+            rtnMsg.putMsgData(Constants.invokeErrorClass, name);
+            rtnMsg.putMsgData(Constants.invokeErrorMessage, StringUtil.isEmpty(message) ? "" : message);
             serverExceptionHandler.exceptionCallBack(ctx.channel().remoteAddress(), msg, e);
         } finally {
             logger.debug("invoked from:{} {}", from, s);
             ProducerCtx.remove();
         }
-        return qyMsg;
+        return rtnMsg;
     }
 
 }
