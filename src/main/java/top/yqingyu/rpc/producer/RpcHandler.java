@@ -32,15 +32,18 @@ public class RpcHandler extends QyMsgServerHandler {
     protected QyMsg handle(ChannelHandlerContext ctx, QyMsg msg) throws Exception {
         String linkId = MsgHelper.gainMsgValue(msg, Constants.linkId);
         linkId = linkId == null ? msg.getFrom() : linkId;
-        Producer.RPC_LINK_ID.put(Thread.currentThread().getName(), linkId);
-        QyMsg deal = deal(ctx, msg);
-        if (deal != null) {
-            deal.setFrom(producer.serverName);
-            deal.setDataType(msg.getDataType());
-            deal.setMsgType(msg.getMsgType());
+        try {
+            ProducerCtx.newInstance(linkId);
+            QyMsg deal = deal(ctx, msg);
+            if (deal != null) {
+                deal.setFrom(producer.serverName);
+                deal.setDataType(msg.getDataType());
+                deal.setMsgType(msg.getMsgType());
+            }
+            return deal;
+        } finally {
+            ProducerCtx.remove();
         }
-        Producer.RPC_LINK_ID.remove(Thread.currentThread().getName(), linkId);
-        return deal;
     }
 
     QyMsg deal(ChannelHandlerContext ctx, QyMsg msg) {
@@ -54,7 +57,7 @@ public class RpcHandler extends QyMsgServerHandler {
         if (MsgType.HEART_BEAT.equals(msg.getMsgType())) {
             return null;
         }
-        ProducerCtx producerCtx = new ProducerCtx();
+        ProducerCtx producerCtx = ProducerCtx.getCtx();
         String s = MsgHelper.gainMsg(msg);
         String from = msg.getFrom();
         try {
@@ -85,7 +88,6 @@ public class RpcHandler extends QyMsgServerHandler {
             serverExceptionHandler.exceptionCallBack(ctx.channel().remoteAddress(), msg, e);
         } finally {
             logger.debug("invoked from:{} {}", from, s);
-            ProducerCtx.remove();
         }
         return rtnMsg;
     }

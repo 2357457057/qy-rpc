@@ -21,7 +21,6 @@ public class Producer {
     public static final Logger logger = LoggerFactory.getLogger(Producer.class);
     static int serviceIdentifierTag = "QyRpcProducer".hashCode();
     final ConcurrentHashMap<String, Bean> ROUTING_TABLE = new ConcurrentHashMap<>();
-    static final ConcurrentHashMap<String, String> RPC_LINK_ID = new ConcurrentHashMap<>();
     volatile MsgServer msgServer;
     final String serverName;
     final ServerExceptionHandler exceptionHandler;
@@ -92,14 +91,6 @@ public class Producer {
             }
             register(constructor.newInstance());
         }
-    }
-
-    public static String getLinkId() {
-        return RPC_LINK_ID.get(Thread.currentThread().getName());
-    }
-
-    public static String getLinkId(String th) {
-        return RPC_LINK_ID.get(th);
     }
 
     public void start() throws Exception {

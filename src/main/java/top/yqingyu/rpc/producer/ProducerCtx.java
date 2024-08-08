@@ -10,8 +10,8 @@ public class ProducerCtx {
     Object rtn;
     String from;
 
-    ProducerCtx() {
-        this.rpcLinkId = Producer.getLinkId();
+    ProducerCtx(String rpcLinkId) {
+        this.rpcLinkId = rpcLinkId;
         CTX.set(this);
     }
 
@@ -45,6 +45,10 @@ public class ProducerCtx {
 
     static void remove() {
         CTX.remove();
+    }
+
+    static void newInstance(String rpcLinkId) {
+        new ProducerCtx(rpcLinkId);
     }
 
 }
