@@ -20,13 +20,13 @@ class Bean {
         ProducerCtx ctx = ProducerCtx.getCtx();
         try {
             if (logger.isDebugEnabled())
-                logger.debug("invoke from:{} data:{}", ctx.from, ctx.invokeStr);
+                logger.debug("invoking from:{} is:{}", ctx.from, ctx.invokeStr);
             ctx.rtn = method.invoke(object, ctx.args);
             if (logger.isDebugEnabled())
-                logger.debug("invoke suc from:{} data:{}", ctx.from, ctx.invokeStr);
+                logger.debug("invoked suc from:{} is:{}", ctx.from, ctx.invokeStr);
         } catch (Throwable e) {
             if (logger.isDebugEnabled())
-                logger.debug("invoked err from:{} data:{} msg:{}", ctx.from, ctx.invokeStr, e.getMessage());
+                logger.debug("invoked err from:{} is:{} msg:{}", ctx.from, ctx.invokeStr, e.getMessage());
             throw e;
         }
     }
