@@ -43,6 +43,9 @@ public class ProducerCtx {
     public static ProducerCtx getCtx() {
         return CTX.get();
     }
+    public static String getIs(){
+        return CTX.get().invokeStr;
+    }
 
     static void remove() {
         CTX.remove();
