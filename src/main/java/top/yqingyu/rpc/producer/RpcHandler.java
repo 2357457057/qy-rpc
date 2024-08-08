@@ -51,21 +51,22 @@ public class RpcHandler extends QyMsgServerHandler {
         if (MsgType.AC.equals(msg.getMsgType())) {
             rtnMsg.putMsg(Constants.invokeSuccess);
             rtnMsg.putMsgData(Constants.serviceIdentifierTag, Producer.serviceIdentifierTag);
-            logger.info("client connected from :{}", msg.getFrom());
+            if (logger.isInfoEnabled())
+                logger.info("client connected from :{}", msg.getFrom());
             return rtnMsg;
         }
         if (MsgType.HEART_BEAT.equals(msg.getMsgType())) {
             return null;
         }
         ProducerCtx producerCtx = ProducerCtx.getCtx();
-        String s = MsgHelper.gainMsg(msg);
+        producerCtx.invokeStr = MsgHelper.gainMsg(msg);
         String from = msg.getFrom();
         try {
             producerCtx.from = from;
-            logger.debug("invoke from:{} data:{}", from, s);
-            Bean bean = ROUTING_TABLE.get(s);
+            Bean bean = ROUTING_TABLE.get(producerCtx.invokeStr);
             producerCtx.bean = bean;
             if (bean == null) {
+                producer.INVOKE_NO_SUCH.get().invoke();
                 rtnMsg.putMsg(Constants.invokeNoSuch);
                 return rtnMsg;
             }
@@ -80,14 +81,11 @@ public class RpcHandler extends QyMsgServerHandler {
             cause.printStackTrace(new PrintStream(outputStream));
             String name = cause.getClass().getName();
             String message = cause.getMessage();
-
             rtnMsg.putMsg(Constants.invokeThrowError);
             rtnMsg.putMsgData(Constants.invokeResult, outputStream.toString(StandardCharsets.UTF_8));
             rtnMsg.putMsgData(Constants.invokeErrorClass, name);
             rtnMsg.putMsgData(Constants.invokeErrorMessage, StringUtil.isEmpty(message) ? "" : message);
             serverExceptionHandler.exceptionCallBack(ctx.channel().remoteAddress(), msg, e);
-        } finally {
-            logger.debug("invoked from:{} {}", from, s);
         }
         return rtnMsg;
     }

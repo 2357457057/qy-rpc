@@ -9,6 +9,7 @@ public class ProducerCtx {
     Object[] args;
     Object rtn;
     String from;
+    String invokeStr;
 
     ProducerCtx(String rpcLinkId) {
         this.rpcLinkId = rpcLinkId;

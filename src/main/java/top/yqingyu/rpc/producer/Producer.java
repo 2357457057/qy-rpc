@@ -21,6 +21,7 @@ public class Producer {
     public static final Logger logger = LoggerFactory.getLogger(Producer.class);
     static int serviceIdentifierTag = "QyRpcProducer".hashCode();
     final ConcurrentHashMap<String, Bean> ROUTING_TABLE = new ConcurrentHashMap<>();
+    final ThreadLocal<Bean> INVOKE_NO_SUCH;
     volatile MsgServer msgServer;
     final String serverName;
     final ServerExceptionHandler exceptionHandler;
@@ -42,6 +43,15 @@ public class Producer {
         bodyLengthMax = builder.bodyLengthMax;
         threadName = builder.threadName;
         port = builder.port;
+        INVOKE_NO_SUCH = ThreadLocal.withInitial(() -> {
+            Bean bean = new Bean();
+            bean.object = this;
+            bean.chain = interceptorChain;
+            try {
+                bean.method = this.getClass().getMethod("fake");
+            } catch (NoSuchMethodException ignore) {}
+            return bean;
+        });
     }
 
     /**
@@ -212,4 +222,9 @@ public class Producer {
             return new Producer(this);
         }
     }
+
+    /**
+     * 为使得无路由的方法也能成功出发拦截器的无用方法
+     */
+    public final void fake() {}
 }
