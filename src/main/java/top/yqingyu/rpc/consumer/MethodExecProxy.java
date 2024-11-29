@@ -7,6 +7,7 @@ import top.yqingyu.common.qydata.DataMap;
 import top.yqingyu.common.utils.StringUtil;
 import top.yqingyu.qymsg.*;
 import top.yqingyu.qymsg.netty.Connection;
+import top.yqingyu.qymsg.netty.MsgClient;
 import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.annontation.QyRpcProducerProperties;
 import top.yqingyu.rpc.exception.RemoteServerException;
@@ -20,7 +21,6 @@ import java.lang.reflect.Method;
 public abstract class MethodExecProxy {
     protected final Logger logger = LoggerFactory.getLogger(MethodExecProxy.class);
     ConsumerHolder holder;
-    final static Boolean b = false;
     protected final ProxyMetaDataCache cache;
     protected final Class<?> proxyClass;
     protected final ConsumerHolderContext ctx;
@@ -34,6 +34,7 @@ public abstract class MethodExecProxy {
         this.interceptor = ctx.methodExecuteInterceptor;
         cache = new ProxyMetaDataCache(proxyClass);
     }
+
     public Object invoke0(Object obj, Method method, Object[] param) throws Throwable {
         if (holder == null) {
             holder = ctx.getConsumerHolder(holderName);
@@ -202,18 +203,24 @@ public abstract class MethodExecProxy {
     }
 
     private static QyMsg get(boolean b, Consumer consumer, QyMsg in, long time) throws Exception {
-        Connection connection = consumer.getClient().getConnection();
         QyMsg qyMsg;
-        if (b) {
-            qyMsg = connection.get(in, time);
-            if (qyMsg == null) {
-                throw new RpcTimeOutException("rpc invoke time out time {}", time);
+        MsgClient client = consumer.getClient();
+        Connection connection = null;
+        try {
+            connection = client.getConnection();
+            if (b) {
+                qyMsg = connection.get(in, time);
+                if (qyMsg == null) {
+                    throw new RpcTimeOutException("rpc invoke time out time {}", time);
+                }
+                return qyMsg;
             }
-            return qyMsg;
-        }
-        qyMsg = connection.get(in);
-        if (qyMsg == null) {
-            throw new RpcException("can not receive back msg");
+            qyMsg = connection.get(in);
+            if (qyMsg == null) {
+                throw new RpcException("can not receive back msg");
+            }
+        } finally {
+            client.returnConnection(connection);
         }
         return qyMsg;
     }
