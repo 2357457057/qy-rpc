@@ -10,6 +10,7 @@ import top.yqingyu.qymsg.MsgHelper;
 import top.yqingyu.qymsg.MsgType;
 import top.yqingyu.qymsg.QyMsg;
 import top.yqingyu.qymsg.netty.Connection;
+import top.yqingyu.qymsg.netty.MsgClient;
 import top.yqingyu.rpc.Constants;
 import top.yqingyu.rpc.consumer.conf.ProxyMode;
 import top.yqingyu.rpc.exception.NoSuchHolderException;
@@ -45,13 +46,15 @@ public class ConsumerHolderContext {
     }
 
     void addConsumer(Consumer consumer) throws Exception {
-        Connection connection = consumer.getClient().getConnection();
+        MsgClient client = consumer.getClient();
+        Connection connection = client.getConnection();
         String name = consumer.getName();
         QyMsg qyMsg = new QyMsg(MsgType.AC, DataType.OBJECT);
         qyMsg.setFrom(consumer.getId());
         QyMsg back = connection.get(qyMsg, Constants.authenticationWaitTime);
         String tag = MsgHelper.gainMsgValue(back, Constants.serviceIdentifierTag);
         logger.info("created rpc connection：{} ,server tag {}", name, tag);
+        client.returnConnection(connection);
         if (!CONSUMER_MAP.containsKey(name)) {
             ConsumerHolder holder = new ConsumerHolder(tag, this);
             holder.add(consumer, tag);
